@@ -60,7 +60,6 @@ class ModelTrainer(BaseTrainer):
                                dataset_size=args.val_data_size)
         self.logger_test, self.model_test, self.val_loader = self.build_phase(test_params, phase='val')
 
-        raise
 
         # set up optimizer + evaluator
         self.optimizer = self.get_optimizer_class()(filter(lambda p: p.requires_grad, self.model.parameters()), lr=self._hp.lr)
