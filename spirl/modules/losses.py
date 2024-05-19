@@ -53,7 +53,35 @@ class KLDivLoss(Loss):
     def compute(self, estimates, targets):
         if not isinstance(estimates, Gaussian): estimates = Gaussian(estimates)
         if not isinstance(targets, Gaussian): targets = Gaussian(targets)
-        kl_divergence = estimates.kl_divergence(targets)
+        kl_divergence = estimates.kl_divergence(targets) # self=q and other=p and we compute KL(q, p)
+        return kl_divergence
+    
+class DivaKLDivLoss(Loss):
+    # Actual DIVA KL Divergence part
+    def compute(self, mu, log_sigma, prob_comps, comp_mu, comp_var):
+
+        # We consider only probabilistic assignments, not hard ones
+        # get a distribution of the latent variables 
+        var = torch.exp(log_sigma)**2
+        # batch_shape [batch_size], event_shape [latent_dim]
+        # Computing the Multivariate distributions:
+        dist = torch.distributions.MultivariateNormal(loc=mu, 
+                                                        covariance_matrix=torch.diag_embed(var))
+        # get a distribution for each cluster
+        B, K = prob_comps.shape # batch_shape, number of active clusters
+        kld = torch.zeros(B).to(mu.device)
+        for k in range(K):
+            # batch_shape [], event_shape [latent_dim]
+            prob_k = prob_comps[:, k]
+            dist_k = torch.distributions.MultivariateNormal(loc=comp_mu[k].to(mu.device), 
+                                                        covariance_matrix=torch.diag_embed(comp_var[k]).to(mu.device))
+            # batch_shape [batch_size], event_shape [latent_dim]
+            expanded_dist_k = dist_k.expand(dist.batch_shape)
+
+            kld_k = torch.distributions.kl_divergence(dist, expanded_dist_k)   #  shape [batch_shape, ]
+            kld += torch.from_numpy(prob_k).to(mu.device) * kld_k
+            
+        kl_divergence = torch.mean(kld)
         return kl_divergence
 
 

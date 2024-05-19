@@ -3,7 +3,7 @@ import argparse
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--path", help="path to the config file directory")
+    parser.add_argument("--path", help="path to the config file directory", default="/home/ubuntu/Mikhail/spirl/spirl/configs/skill_prior_learning/kitchen/spirl_DPMM_h_cl")
 
     # Folder settings
     parser.add_argument("--prefix", help="experiment prefix, if given creates subfolder in experiment directory")

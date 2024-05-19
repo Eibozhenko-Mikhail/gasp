@@ -45,7 +45,7 @@ class SkillPriorMdl(BaseModel, ProbabilisticModel):
         self.load_weights_and_freeze()
 
     @contextmanager
-    def val_mode(self):
+    def val_mode(self): # Called in evaluation phase, switches to sampling from prior ()
         self.switch_to_prior()
         yield
         self.switch_to_inference()
@@ -76,7 +76,7 @@ class SkillPriorMdl(BaseModel, ProbabilisticModel):
             'n_prior_nets': 1,              # number of prior networks in ensemble
             'num_prior_net_layers': 6,      # number of layers of the learned prior MLP
             'nz_mid_prior': 128,            # dimensionality of internal feature spaces for prior net
-            'nll_prior_train': True,        # if True, trains learned prior by maximizing NLL
+            'nll_prior_train': False,        # if True, trains learned prior by maximizing NLL, default=true
             'learned_prior_type': 'gauss',  # distribution type for learned prior, ['gauss', 'gmm', 'flow']
             'n_gmm_prior_components': 5,    # number of Gaussian components for GMM learned prior
         })
@@ -119,12 +119,12 @@ class SkillPriorMdl(BaseModel, ProbabilisticModel):
         inputs.observations = inputs.actions    # for seamless evaluation
 
         # run inference
-        output.q = self._run_inference(inputs)
+        output.q = self._run_inference(inputs) # q(z|a)
 
         # compute (fixed) prior
-        output.p = get_fixed_prior(output.q)
+        output.p = get_fixed_prior(output.q) # p(z) ~ N(0,1)
 
-        # infer learned skill prior
+        # infer learned skill prior, p(z|s0)
         output.q_hat = self.compute_learned_prior(self._learned_prior_input(inputs))
         if use_learned_prior:
             output.p = output.q_hat     # use output of learned skill prior for sampling
@@ -153,7 +153,7 @@ class SkillPriorMdl(BaseModel, ProbabilisticModel):
             (Gaussian(model_output.reconstruction, torch.zeros_like(model_output.reconstruction)),
              self._regression_targets(inputs))
 
-        # KL loss
+        # KL loss, KL(q(z|a)||p(z))
         losses.kl_loss = KLDivLoss(self.beta)(model_output.q, model_output.p)
 
         # learned skill prior net loss
@@ -301,8 +301,10 @@ class SkillPriorMdl(BaseModel, ProbabilisticModel):
 
     def _compute_learned_prior_loss(self, model_output):
         if self._hp.nll_prior_train:
+            # NLL (p(z|s0), q(z|a))
             loss = NLL(breakdown=0)(model_output.q_hat, model_output.z_q.detach())
         else:
+            # KL (q(z|a) || p(z|s0))
             loss = KLDivLoss(breakdown=0)(model_output.q.detach(), model_output.q_hat)
         # aggregate loss breakdown for each of the priors in the ensemble
         loss.breakdown = torch.stack([chunk.mean() for chunk in torch.chunk(loss.breakdown, self._hp.n_prior_nets)])

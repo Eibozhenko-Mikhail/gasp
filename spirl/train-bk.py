@@ -23,8 +23,8 @@ from spirl.components.trainer_base import BaseTrainer
 from spirl.utils.wandb import WandBLogger
 from spirl.components.params import get_args
 
-WANDB_PROJECT_NAME = 'spirl'
-WANDB_ENTITY_NAME = 'mikhailerox'
+WANDB_PROJECT_NAME = 'your_project_name'
+WANDB_ENTITY_NAME = 'your_entity_name'
 
 
 class ModelTrainer(BaseTrainer):
@@ -60,8 +60,6 @@ class ModelTrainer(BaseTrainer):
                                dataset_size=args.val_data_size)
         self.logger_test, self.model_test, self.val_loader = self.build_phase(test_params, phase='val')
 
-        raise
-
         # set up optimizer + evaluator
         self.optimizer = self.get_optimizer_class()(filter(lambda p: p.requires_grad, self.model.parameters()), lr=self._hp.lr)
         self.evaluator = self._hp.evaluator(self._hp, self.log_dir, self._hp.top_of_n_eval,
@@ -82,7 +80,6 @@ class ModelTrainer(BaseTrainer):
     def _default_hparams(self):
         default_dict = ParamDict({
             'model': None,
-            'train_Diva_model': True, # THESIS ADJUSTMENT
             'model_test': None,
             'logger': None,
             'logger_test': None,
@@ -120,22 +117,6 @@ class ModelTrainer(BaseTrainer):
                     'optimizer': self.optimizer.state_dict(),
                 },  os.path.join(self._hp.exp_path, 'weights'), CheckpointHandler.get_ckpt_name(epoch))
 
-            # Saves DPMM parameters as well:
-
-            if not self.args.dont_save and self._hp.train_Diva_model:
-                save_checkpoint({
-                    'epoch': epoch,
-                    'global_step': self.global_step,
-                    'state_dict': self.model.state_dict(),
-                    'optimizer': self.optimizer.state_dict(),
-                    'DPMM_bnp_model': self.model.bnp_model,
-                    'DPMM_bnp_info_dict': self.model.bnp_info_dict,
-                    'DPMM_comp_mu': self.model.comp_mu,
-                    'DPMM_comp_var': self.model.comp_var,
-                    'DPMM_logging_clusters': self.model.cluster_logging,
-                },  os.path.join(self._hp.exp_path, 'weights'), CheckpointHandler.get_ckpt_name(epoch))
-                print("Model saved!")
-
             if epoch % self.args.val_interval == 0:
                 self.val()
 
@@ -148,7 +129,7 @@ class ModelTrainer(BaseTrainer):
         data_load_time = AverageMeter()
         self.log_outputs_interval = self.args.log_interval
         self.log_images_interval = int(epoch_len / self.args.per_epoch_img_logs)
-        output_list = []
+        
         print('starting epoch ', epoch)
 
         for self.batch_idx, sample_batched in enumerate(self.train_loader):
@@ -192,18 +173,9 @@ class ModelTrainer(BaseTrainer):
                 togo_train_time = batch_time.avg * (self._hp.num_epochs - epoch) * epoch_len / 3600.
                 print('ETA: {:.2f}h'.format(togo_train_time))
 
-            output_list.append(output.z) # Combining all latent outputs together
-            del losses
+            del output, losses
             self.global_step = self.global_step + 1
 
-        ### FIT DPMM at the end of the epoch   
-        outputs = torch.stack(output_list)
-        if self._hp.train_Diva_model:
-          z = torch.cat([outputs[i] for i in range(0, len(outputs))])
-          self.model.fit_dpmm(z)
-          self.model.cluster_logging.append(self.model.num_clusters)
-        del outputs
-        
     def val(self):
         print('Running Testing')
         if self.args.test_prediction:
@@ -332,9 +304,11 @@ class ModelTrainer(BaseTrainer):
             dataset_class = RandomVideoDataset
         else:
             dataset_class = data_conf.dataset_spec.dataset_class
+
         loader = dataset_class(self._hp.data_dir, data_conf, resolution=model.resolution,
                                phase=phase, shuffle=phase == "train", dataset_size=dataset_size). \
             get_data_loader(self._hp.batch_size, n_repeat)
+
         return loader
 
     def resume(self, ckpt, path=None):

@@ -1,5 +1,6 @@
 from spirl.configs.hrl.kitchen.spirl.conf import *
 from spirl.models.closed_loop_spirl_mdl import ClSPiRLMdl
+from spirl.models.CL_SPIRL_DIVA_mdl import SPiRL_DIVAMdl
 from spirl.rl.policies.cl_model_policies import ClModelPolicy
 
 # update model params to conditioned decoder on state
@@ -7,10 +8,13 @@ ll_model_params.cond_decode = True
 
 # create LL closed-loop policy
 ll_policy_params = AttrDict(
-    policy_model=ClSPiRLMdl,
+    policy_model=SPiRL_DIVAMdl, 
+    #policy_model=ClSPiRLMdl, # Original code
     policy_model_params=ll_model_params,
+    #policy_model_checkpoint=os.path.join(os.environ["EXP_DIR"],
+                                         #"skill_prior_learning/kitchen/hierarchical_cl"), # OriginalCode
     policy_model_checkpoint=os.path.join(os.environ["EXP_DIR"],
-                                         "skill_prior_learning/kitchen/hierarchical_cl"),
+                                         "skill_prior_learning/kitchen/spirl_DPMM_h_cl"),
 )
 ll_policy_params.update(ll_model_params)
 
