@@ -30,7 +30,7 @@ import matplotlib.pyplot as plt
 import matplotlib.markers as mark
 from sklearn.manifold import TSNE
 # Path to the checkpoint
-checkpoint_path = './experiments/skill_prior_learning/kitchen/spirl_DPMM_h_cl/weights/weights_ep99.pth'
+checkpoint_path = './experiments/skill_prior_learning/kitchen/spirl_DPMM_h_cl_v2/weights/weights_ep65.pth'
 
 # Load checkpoint
 checkpoint = torch.load(checkpoint_path)
@@ -104,6 +104,7 @@ print("Uploaded model params:")
 print("Mu components: ", model.comp_mu)
 print("Var components: ", model.comp_var)
 print("Currently clusters: ",model.cluster_logging[-1])
+print("Cluster history: ", model.cluster_logging)
 print("_______________")
 
 def sample_component(model,
@@ -149,10 +150,10 @@ def sample_gauss_component(model,
 data_cloud = []
 num_clusters = len(model.comp_mu)
 
-sample_gauss = True # Toggle for additional original Gauss VAE sampling
-sample_gauss_as_other_pic = False # Toggle for additional original Gauss VAE sampling in the different picture
+sample_gauss = False # Toggle for additional original Gauss VAE sampling
+sample_gauss_as_other_pic = True # Toggle for additional original Gauss VAE sampling in the different picture
 
-num_samples = 15
+num_samples = 120
 for k in range(0, num_clusters):
     data_cloud.extend((sample_component(model=model, num_samples=num_samples, component=k)).numpy())
 
@@ -164,8 +165,8 @@ print("Computing TSNE...")
 tsne = TSNE(n_components=2, random_state=0)
 X_tsne = tsne.fit_transform(data_cloud)
 
-# Setting colors (10 max, extend by need)
-colors = ['blue', 'red', 'green', 'orange', 'purple','brown','pink', 'gray', 'olive', 'cyan']
+# Setting colors (14 max, extend by need)
+colors = ['blue', 'red', 'green', 'orange', 'purple','brown','pink', 'gray', 'olive', 'cyan', 'lime', 'blueviolet','dodgerblue','salmon']
 cluster_sizes = [num_samples] * num_clusters  
 
 # Plotting datapoints, assigning cluster colors
@@ -184,7 +185,7 @@ plt.xlabel('t-SNE Component 1')
 plt.ylabel('t-SNE Component 2')
 plt.grid(True)
 plt.legend()
-plt.savefig('/home/ubuntu/Mikhail/spirl/DPMM_visualisation.png',bbox_inches='tight')
+plt.savefig('/home/ubuntu/Mikhail/spirl/DPMM_visualisation_v2.png',bbox_inches='tight')
 plt.show()
 
 # Toggle for gaussian distribution of original VAE in other picture
@@ -205,7 +206,7 @@ if sample_gauss_as_other_pic:
     plt.ylabel('t-SNE Component 2')
     plt.grid(True)
     plt.legend()
-    plt.savefig('/home/ubuntu/Mikhail/spirl/Gauss_visualisation.png',bbox_inches='tight')
+    plt.savefig('/home/ubuntu/Mikhail/spirl/Gauss_visualisation_v2.png',bbox_inches='tight')
     plt.show()
 
 def latent_space_analysis(model, num_clusters):
@@ -240,3 +241,12 @@ print("|                                                       |")
 for i in range(0, num_clusters):
      print("|",i+1,"|",Euq[i],"|",Mah[i],"|",KL[i],"|")
 print("|_______________________________________________________|")
+
+plt.figure()
+plt.plot(range(len(model.cluster_logging)), model.cluster_logging,linestyle='-')
+plt.title('History of clusters')
+plt.xlabel('Epoch')
+plt.ylabel('Number of Clusters')
+plt.grid(True)
+plt.savefig('/home/ubuntu/Mikhail/spirl/Logging_v2.png',bbox_inches='tight')
+plt.show()

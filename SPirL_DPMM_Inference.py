@@ -31,7 +31,7 @@ import matplotlib.pyplot as plt
 import matplotlib.markers as mark
 from sklearn.manifold import TSNE
 # Path to the checkpoint
-checkpoint_path = './experiments/skill_prior_learning/kitchen/spirl_DPMM_h_cl/weights/weights_ep99.pth'
+checkpoint_path = './experiments/skill_prior_learning/kitchen/spirl_DPMM_h_cl_v2/weights/weights_ep65.pth'
 
 # Load checkpoint
 checkpoint = torch.load(checkpoint_path)
@@ -149,8 +149,8 @@ def plot_samples(out, model, num__samples, num_inferences):
     tsne = TSNE(n_components=2, random_state=0)
     X_tsne = tsne.fit_transform(data_cloud)
 
-    # Setting colors (9 max, extend by need)
-    colors = ['blue', 'red', 'green', 'orange', 'purple','brown','pink', 'olive', 'cyan']
+    # Setting colors (13 max, extend by need)
+    colors = ['blue', 'red', 'green', 'orange', 'purple','brown','pink', 'olive', 'cyan', 'lime', 'blueviolet','dodgerblue','salmon']
     cluster_sizes = [num_samples] * num_clusters  
     inference_sizes =  [num_samples] * num_inferences
     # Plotting datapoints, assigning cluster colors
@@ -179,4 +179,4 @@ print("Prior mu, sigma:",out.q_hat.mu, out.q_hat.log_sigma)
 print("Latent mu, sigma:",out.q.mu, out.q.log_sigma)
 print(out.q_hat.mu.shape)
 
-plot_samples(out=out, model=model, num__samples=120, num_inferences=3)
+plot_samples(out=out, model=model, num__samples=120, num_inferences=10)

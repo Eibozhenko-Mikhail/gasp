@@ -72,6 +72,37 @@ class SPiRL_DIVAMdl(SkillPriorMdl):
         inf_input = torch.cat((inputs.actions, self._get_seq_enc(inputs)), dim=-1)
         return MultivariateGaussian(self.q(inf_input)[:, -1]) 
 
+    def forward(self, inputs, use_learned_prior=False):
+        """Forward pass of the SPIRL model.
+        :arg inputs: dict with 'states', 'actions', 'images' keys from data loader
+        :arg use_learned_prior: if True, decodes samples from learned prior instead of posterior, used for RL
+        """
+        output = AttrDict()
+        inputs.observations = inputs.actions    # for seamless evaluation
+
+        # run inference
+        output.q = self._run_inference(inputs) # q(z|a)
+
+        # compute (fixed) prior
+        output.p = get_fixed_prior(output.q) # p(z) ~ N(0,1)
+
+        # infer learned skill prior, p(z|s0)
+        output.q_hat = self.compute_learned_prior(self._learned_prior_input(inputs))
+        if use_learned_prior:
+            output.p = output.q_hat     # use output of learned skill prior for sampling
+
+        # sample latent variable
+        output.z = output.p.sample() if self._sample_prior else output.q.sample() # TODO: p.sample is wrong, sample from DPMM
+        output.z_q = output.z.clone() if not self._sample_prior else output.q.sample()   # for loss computation
+
+        # decode
+        assert self._regression_targets(inputs).shape[1] == self._hp.n_rollout_steps
+        output.reconstruction = self.decode(output.z,
+                                            cond_inputs=self._learned_prior_input(inputs),
+                                            steps=self._hp.n_rollout_steps,
+                                            inputs=inputs)
+        return output
+    
     def loss(self, model_output, inputs):
         """Loss computation of the SPIRL model.
         :arg model_output: output of SPIRL model forward pass
