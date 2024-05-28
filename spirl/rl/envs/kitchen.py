@@ -17,7 +17,7 @@ class KitchenEnv(GymEnv):
 
     def step(self, *args, **kwargs):
         obs, rew, done, info = super().step(*args, **kwargs)
-        return obs, np.float64(rew), done, info #self._postprocess_info(info)  # casting reward to float64 is important for getting shape later
+        return obs, np.float64(rew), done, self._postprocess_info(info) #info # casting reward to float64 is important for getting shape later
 
     def reset(self):
         self.solved_subtasks = defaultdict(lambda: 0)

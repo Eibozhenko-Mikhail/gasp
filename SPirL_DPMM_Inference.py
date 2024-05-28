@@ -31,7 +31,7 @@ import matplotlib.pyplot as plt
 import matplotlib.markers as mark
 from sklearn.manifold import TSNE
 # Path to the checkpoint
-checkpoint_path = './experiments/skill_prior_learning/kitchen/spirl_DPMM_h_cl_v2/weights/weights_ep65.pth'
+checkpoint_path = './experiments/skill_prior_learning/kitchen/spirl_DPMM_h_cl_v3/weights/weights_ep99.pth'
 
 # Load checkpoint
 checkpoint = torch.load(checkpoint_path)
@@ -179,4 +179,4 @@ print("Prior mu, sigma:",out.q_hat.mu, out.q_hat.log_sigma)
 print("Latent mu, sigma:",out.q.mu, out.q.log_sigma)
 print(out.q_hat.mu.shape)
 
-plot_samples(out=out, model=model, num__samples=120, num_inferences=10)
+plot_samples(out=out, model=model, num__samples=120, num_inferences=3)

@@ -30,7 +30,7 @@ import matplotlib.pyplot as plt
 import matplotlib.markers as mark
 from sklearn.manifold import TSNE
 # Path to the checkpoint
-checkpoint_path = './experiments/skill_prior_learning/kitchen/spirl_DPMM_h_cl_v2/weights/weights_ep99.pth'
+checkpoint_path = './experiments/skill_prior_learning/kitchen/spirl_DPMM_h_cl_v3/weights/weights_ep199.pth'
 
 # Load checkpoint
 checkpoint = torch.load(checkpoint_path)
@@ -150,8 +150,8 @@ def sample_gauss_component(model,
 data_cloud = []
 num_clusters = len(model.comp_mu)
 
-sample_gauss = False # Toggle for additional original Gauss VAE sampling
-sample_gauss_as_other_pic = True # Toggle for additional original Gauss VAE sampling in the different picture
+sample_gauss = True # Toggle for additional original Gauss VAE sampling
+sample_gauss_as_other_pic = False # Toggle for additional original Gauss VAE sampling in the different picture
 
 num_samples = 120
 for k in range(0, num_clusters):
@@ -185,7 +185,7 @@ plt.xlabel('t-SNE Component 1')
 plt.ylabel('t-SNE Component 2')
 plt.grid(True)
 plt.legend()
-plt.savefig('/home/ubuntu/Mikhail/spirl/DPMM_visualisation_v2.png',bbox_inches='tight')
+plt.savefig('/home/ubuntu/Mikhail/spirl/DPMM_visualisation_v3.png',bbox_inches='tight')
 plt.show()
 
 # Toggle for gaussian distribution of original VAE in other picture
@@ -206,7 +206,7 @@ if sample_gauss_as_other_pic:
     plt.ylabel('t-SNE Component 2')
     plt.grid(True)
     plt.legend()
-    plt.savefig('/home/ubuntu/Mikhail/spirl/Gauss_visualisation_v2.png',bbox_inches='tight')
+    plt.savefig('/home/ubuntu/Mikhail/spirl/Gauss_visualisation_v3.png',bbox_inches='tight')
     plt.show()
 
 def latent_space_analysis(model, num_clusters):

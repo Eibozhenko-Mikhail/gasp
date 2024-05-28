@@ -17,4 +17,4 @@ pandas
 # RL
 wandb
 mpi4py
-mujoco_py==2.0.2.9
+mujoco-py<2.2,>=2.1
