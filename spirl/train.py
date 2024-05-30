@@ -89,7 +89,7 @@ class ModelTrainer(BaseTrainer):
             'data_dir': None,  # directory where dataset is in
             'batch_size': 128,
             'exp_path': None,  # Path to the folder with experiments
-            'num_epochs': 200,
+            'num_epochs': 100,
             'epoch_cycles_train': 1,
             'optimizer': 'radam',    # supported: 'adam', 'radam', 'rmsprop', 'sgd'
             'lr': 1e-3,
@@ -156,6 +156,7 @@ class ModelTrainer(BaseTrainer):
             with self.training_context():
                 self.optimizer.zero_grad()
                 output = self.model(inputs)
+                output_list.append(output.z) # Combining all latent outputs together for DPMM
                 losses = self.model.loss(output, inputs)
                 losses.total.value.backward()
                 self.call_hooks(inputs, output, losses, epoch)
@@ -191,8 +192,7 @@ class ModelTrainer(BaseTrainer):
                 togo_train_time = batch_time.avg * (self._hp.num_epochs - epoch) * epoch_len / 3600.
                 print('ETA: {:.2f}h'.format(togo_train_time))
 
-            output_list.append(output.z) # Combining all latent outputs together
-            del losses
+            del output, losses
             self.global_step = self.global_step + 1
 
         ### FIT DPMM at the end of the epoch   
@@ -201,7 +201,7 @@ class ModelTrainer(BaseTrainer):
           z = torch.cat([outputs[i] for i in range(0, len(outputs))])
           self.model.fit_dpmm(z)
           self.model.cluster_logging.append(self.model.num_clusters)
-        del outputs
+        del outputs, output_list
         
     def val(self):
         print('Running Testing')

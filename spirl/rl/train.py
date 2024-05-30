@@ -159,7 +159,7 @@ class RLTrainer:
             with torch.no_grad():
                 with timing("Eval rollout time: "):
                     for _ in range(WandBLogger.N_LOGGED_SAMPLES):   # for efficiency instead of self.args.n_val_samples
-                        val_rollout_storage.append(self.sampler.sample_episode(is_train=False, render=True))
+                        val_rollout_storage.append(self.sampler.sample_episode(is_train=False, render=False))
 
         rollout_stats = val_rollout_storage.rollout_stats()
         if self.is_chef:
@@ -179,7 +179,7 @@ class RLTrainer:
             with torch.no_grad():
                 for _ in tqdm(range(self.args.n_val_samples)):
                     while True:     # keep producing rollouts until we get a valid one
-                        episode = self.sampler.sample_episode(is_train=False, render=True)
+                        episode = self.sampler.sample_episode(is_train=False, render=False)
                         valid = not hasattr(self.agent, 'rollout_valid') or self.agent.rollout_valid
                         n_total += 1
                         if valid:

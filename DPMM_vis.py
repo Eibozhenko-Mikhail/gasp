@@ -150,7 +150,7 @@ def sample_gauss_component(model,
 data_cloud = []
 num_clusters = len(model.comp_mu)
 
-sample_gauss = True # Toggle for additional original Gauss VAE sampling
+sample_gauss = False # Toggle for additional original Gauss VAE sampling
 sample_gauss_as_other_pic = False # Toggle for additional original Gauss VAE sampling in the different picture
 
 num_samples = 120

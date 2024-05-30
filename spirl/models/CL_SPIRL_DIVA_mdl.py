@@ -28,9 +28,9 @@ class SPiRL_DIVAMdl(SkillPriorMdl):
         super().__init__(params, logger=logger)
         self.dpmm_param = dict(
             sF=0.1,
-            b_minNumAtomsForNewComp=100.0,
-            b_minNumAtomsForTargetComp=120.0,
-            b_minNumAtomsForRetainComp=120.0,
+            b_minNumAtomsForNewComp=1200.0,
+            b_minNumAtomsForTargetComp=1440.0,
+            b_minNumAtomsForRetainComp=1440.0,
         )
 
         pwd = os.getcwd()

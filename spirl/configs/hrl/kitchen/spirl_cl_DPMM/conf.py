@@ -14,7 +14,7 @@ ll_policy_params = AttrDict(
     #policy_model_checkpoint=os.path.join(os.environ["EXP_DIR"],
                                          #"skill_prior_learning/kitchen/hierarchical_cl"), # OriginalCode
     policy_model_checkpoint=os.path.join(os.environ["EXP_DIR"],
-                                         "skill_prior_learning/kitchen/spirl_DPMM_h_cl"),
+                                         "skill_prior_learning/kitchen/spirl_DPMM_h_cl_v3"),
 )
 ll_policy_params.update(ll_model_params)
 
