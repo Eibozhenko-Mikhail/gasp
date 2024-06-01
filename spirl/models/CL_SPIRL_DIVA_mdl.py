@@ -37,6 +37,7 @@ class SPiRL_DIVAMdl(SkillPriorMdl):
         self.bnp_root = pwd + '/save/bn_model/'
         self.bnp_iterator = cycle(range(2))
         self.bnp_model = None
+        self.bnp_info_dict = None
         self.comp_var = None
         self.comp_mu = None
         self.num_clusters = 0
@@ -92,8 +93,31 @@ class SPiRL_DIVAMdl(SkillPriorMdl):
             output.p = output.q_hat     # use output of learned skill prior for sampling
 
         # sample latent variable
-        output.z = output.p.sample() if self._sample_prior else output.q.sample() # TODO: p.sample is wrong, sample from DPMM
-        output.z_q = output.z.clone() if not self._sample_prior else output.q.sample()   # for loss computation
+        if self._sample_prior: # if validation
+            if not use_learned_prior and self.bnp_model:
+                print("Validation based on DPMM...")
+                z = output.q.sample()
+                _, hard_assignment = self.cluster_assignments(z)  # [batch_size]
+                zs_sampled = []
+                for i in range(len(hard_assignment)):
+                    k = hard_assignment[i]
+                    z_sampled = torch.distributions.MultivariateNormal(
+                        loc=self.comp_mu[k].to(z.device),
+                        covariance_matrix=torch.diag_embed(self.comp_var[k],
+                    ).to(z.device)).sample()
+                    zs_sampled.append(z_sampled)
+                z_component = torch.stack(zs_sampled, dim=0)
+                print("Sampled z shape:", z_component.shape)
+                output.z = z_component
+                print("z should be like:", z.shape)
+                output.z_q = z # for loss computation
+            else:
+                print("Validation based on Gauss...")
+                output.z = output.p.sample()
+                output.z_q = output.q.sample() # for loss computation
+        else: # if training/inference
+            output.z = output.q.sample()
+            output.z_q = output.z.clone() # for loss computation
 
         # decode
         assert self._regression_targets(inputs).shape[1] == self._hp.n_rollout_steps
@@ -123,11 +147,11 @@ class SPiRL_DIVAMdl(SkillPriorMdl):
 
         if not self.bnp_model:
             losses.kl_loss = KLDivLoss(self.beta)(model_output.q, model_output.p)
-            print(" ________________________________________________ ")
-            print("|                   KL-DIV LOSS                  |")
-            print("|                                                |")
-            print("|  Original VAE KL Loss: ----------------- ", round(losses.kl_loss.value.item(), 4))
-            print("|                                                |")
+            # print(" ________________________________________________ ")
+            # print("|                   KL-DIV LOSS                  |")
+            # print("|                                                |")
+            # print("|  Original VAE KL Loss: ----------------- ", round(losses.kl_loss.value.item(), 4))
+            # print("|                                                |")
         else: 
             z = model_output.z_q.detach()          
             comp_mu = self.comp_mu
@@ -136,37 +160,37 @@ class SPiRL_DIVAMdl(SkillPriorMdl):
             _, self.num_clusters = prob_comps.shape
             losses.kl_loss = DivaKLDivLoss(self.beta)(model_output.q.mu, model_output.q.log_sigma, prob_comps, comp_mu, comp_var)
             # Make comparison:
-            test = KLDivLoss(self.beta)(model_output.q, model_output.p)
-            print(" ________________________________________________ ")
-            print("|                DPMM information                |")
-            print("|                                                |")
-            print("|  Currently clusters: ----------------------- ", self.num_clusters)
-            print("|                                                |")
-            print("|________________________________________________|")
-            print("|                   KL-DIV LOSS                  |")
-            print("|                                                |")
-            print("|  Original VAE KL Loss: ----------------- ", round(test.value.item(),4))
-            print("|  DPMM Kldiv loss: ---------------------- ", round(losses.kl_loss.value.item(),4))
-            print("|                                                |")
+            #test = KLDivLoss(self.beta)(model_output.q, model_output.p)
+            # print(" ________________________________________________ ")
+            # print("|                DPMM information                |")
+            # print("|                                                |")
+            # print("|  Currently clusters: ----------------------- ", self.num_clusters)
+            # print("|                                                |")
+            # print("|________________________________________________|")
+            # print("|                   KL-DIV LOSS                  |")
+            # print("|                                                |")
+            # print("|  Original VAE KL Loss: ----------------- ", round(test.value.item(),4))
+            # print("|  DPMM Kldiv loss: ---------------------- ", round(losses.kl_loss.value.item(),4))
+            # print("|                                                |")
 
 
 
         # learned skill prior net loss
         losses.q_hat_loss = self._compute_learned_prior_loss(model_output)
-        print("|________________________________________________|")
-        print("|                Other LOSSes                    |")
-        print("|                                                |")
-        print("|  Computed Prior loss: ------------------ ", round(losses.q_hat_loss.value.item(),4))
-        print("|  Reconstruction loss: ------------------ ", round(losses.rec_mse.value.item(),4))
+        # print("|________________________________________________|")
+        # print("|                Other LOSSes                    |")
+        # print("|                                                |")
+        # print("|  Computed Prior loss: ------------------ ", round(losses.q_hat_loss.value.item(),4))
+        # print("|  Reconstruction loss: ------------------ ", round(losses.rec_mse.value.item(),4))
 
         # Optionally update beta
         if self.training and self._hp.target_kl is not None:
             self._update_bedta(losses.kl_loss.value)
 
         losses.total = self._compute_total_loss(losses)
-        print("|                                                |")
-        print("|  TOTAL LOSS: --------------------------- ", round(losses.total.value.item(),4))
-        print("|________________________________________________|")
+        # print("|                                                |")
+        # print("|  TOTAL LOSS: --------------------------- ", round(losses.total.value.item(),4))
+        # print("|________________________________________________|")
         return losses
     
     def fit_dpmm(self, z):
@@ -207,7 +231,7 @@ class SPiRL_DIVAMdl(SkillPriorMdl):
         self.calc_cluster_component_params()
         print("_____________________ End of DPMM Phase _____________________")
         print("*************************************************************")
-
+    
     def cluster_assignments(self, z):
         z = XData(z.detach().cpu().numpy())
         LP = self.bnp_model.calc_local_params(z)

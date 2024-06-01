@@ -208,6 +208,11 @@ class ModelTrainer(BaseTrainer):
         if self.args.test_prediction:
             start = time.time()
             self.model_test.load_state_dict(self.model.state_dict())
+            if hasattr(self.model, "bnp_model"):
+                self.model_test.bnp_model = self.model.bnp_model
+                self.model_test.bnp_info_dict = self.model.bnp_info_dict
+                self.model_test.comp_mu = self.model.comp_mu
+                self.model_test.comp_var = self.model.comp_var
             losses_meter = RecursiveAverageMeter()
             self.model_test.eval()
             self.evaluator.reset()

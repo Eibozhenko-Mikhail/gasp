@@ -46,8 +46,10 @@ class SkillPriorMdl(BaseModel, ProbabilisticModel):
 
     @contextmanager
     def val_mode(self): # Called in evaluation phase, switches to sampling from prior ()
+        print("Entering Validation Mode")
         self.switch_to_prior()
         yield
+        print("Returning to Training Mode")
         self.switch_to_inference()
 
     def _default_hparams(self):
@@ -205,8 +207,13 @@ class SkillPriorMdl(BaseModel, ProbabilisticModel):
             inputs = map2torch(inputs, device=self.device)
 
             # sample latent variable from prior
-            z = self.compute_learned_prior(self._learned_prior_input(inputs), first_only=True).sample() \
-                if use_learned_prior else Gaussian(torch.zeros((1, self._hp.nz_vae*2), device=self.device)).sample()
+            if use_learned_prior:
+                z = self.compute_learned_prior(self._learned_prior_input(inputs), first_only=True).sample()
+            elif self.bnp_model:
+                # z = Gaussian(torch.zeros((1, self._hp.nz_vae*2), device=self.device)).sample()
+                raise RuntimeError("TODO: sample from DPMM, not from Gaussian!")
+            else:
+                z = Gaussian(torch.zeros((1, self._hp.nz_vae*2), device=self.device)).sample()
 
             # decode into action plan
             z = z.repeat(self._hp.batch_size, 1)  # this is a HACK flat LSTM decoder can only take batch_size inputs

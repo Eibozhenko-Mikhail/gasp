@@ -36,7 +36,7 @@ def get_args():
                         help='number of image loggings per epoch')
     parser.add_argument('--val_data_size', default=-1, type=int,
                         help='number of sequences in the validation set. If -1, the full dataset is used')
-    parser.add_argument('--val_interval', default=5, type=int,
+    parser.add_argument('--val_interval', default=1, type=int,
                         help='number of epochs per validation')
 
     # Debug
