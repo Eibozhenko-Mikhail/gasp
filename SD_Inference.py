@@ -26,12 +26,12 @@ from spirl.models.CL_SPIRL_DIVA_mdl import SPiRL_DIVAMdl
 from spirl.train import ModelTrainer
 from torch import autograd
 from spirl.components.params import get_args
-from spirl.configs.skill_prior_learning.kitchen.spirl_DPMM_h_cl_v4.conf import model_config, data_config
+from spirl.configs.skill_prior_learning.kitchen.spirl_DPMM_h_cl_correct_eval.conf import model_config, data_config
 import matplotlib.pyplot as plt
 import matplotlib.markers as mark
 from sklearn.manifold import TSNE
 # Path to the checkpoint
-checkpoint_path = './experiments/skill_prior_learning/kitchen/spirl_DPMM_h_cl_v4/weights/weights_ep99.pth'
+checkpoint_path = './experiments/skill_prior_learning/kitchen/spirl_DPMM_h_cl_correct_eval/weights/weights_ep99.pth'
 
 # Load checkpoint
 checkpoint = torch.load(checkpoint_path)
@@ -129,7 +129,7 @@ def plot_centroids(out, model):
     plt.ylabel('t-SNE Component 2')
     plt.grid(True)
     plt.legend()
-    plt.savefig('/home/ubuntu/Mikhail/spirl/Prior_mu_v4.png',bbox_inches='tight')
+    plt.savefig('/home/ubuntu/Mikhail/spirl/Prior_mu_correct_eval.png',bbox_inches='tight')
     plt.show()
 
 def plot_samples(out, model, num__samples, num_inferences):
@@ -170,7 +170,7 @@ def plot_samples(out, model, num__samples, num_inferences):
     plt.ylabel('t-SNE Component 2')
     plt.grid(True)
     plt.legend()
-    plt.savefig('/home/ubuntu/Mikhail/spirl/Inference_Projection onto DPMM_v4.png',bbox_inches='tight')
+    plt.savefig('/home/ubuntu/Mikhail/spirl/Inference_Projection onto DPMM_correct_eval.png',bbox_inches='tight')
     plt.show()
 
 
@@ -179,5 +179,5 @@ print("Prior mu, sigma:",out.q_hat.mu, out.q_hat.log_sigma)
 print("Latent mu, sigma:",out.q.mu, out.q.log_sigma)
 print(out.q_hat.mu.shape)
 
-plot_samples(out=out, model=model, num__samples=120, num_inferences=3)
+plot_samples(out=out, model=model, num__samples=30, num_inferences=12)
 plot_centroids(out=out, model=model)

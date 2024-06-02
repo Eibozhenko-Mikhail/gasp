@@ -44,6 +44,16 @@ class CheckpointHandler:
             print(("=> loading checkpoint '{}'".format(weights_file)))
             checkpoint = torch.load(weights_file, map_location=model.device)
             model.load_state_dict(checkpoint['state_dict'], strict=strict)
+            if hasattr(model, "bnp_model"):
+                print("This agent uses bnp_model, updating weights...")
+                model.bnp_model = checkpoint['DPMM_bnp_model']
+                model.bnp_info_dict = checkpoint['DPMM_bnp_info_dict']
+                model.comp_mu = checkpoint['DPMM_comp_mu']
+                model.comp_var = checkpoint['DPMM_comp_var']
+                model.cluster_logging = checkpoint['DPMM_logging_clusters']
+                print("DPMM Components updated!")
+
+
             if load_step:
                 start_epoch = checkpoint['epoch'] + 1
                 global_step = checkpoint['global_step']

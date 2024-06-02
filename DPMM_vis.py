@@ -24,13 +24,13 @@ from spirl.utils.pytorch_utils import RepeatedDataLoader
 from spirl.models.CL_SPIRL_DIVA_mdl import SPiRL_DIVAMdl
 from spirl.train import ModelTrainer
 from spirl.components.params import get_args
-from spirl.configs.skill_prior_learning.kitchen.spirl_DPMM_h_cl_v4.conf import model_config
+from spirl.configs.skill_prior_learning.kitchen.spirl_DPMM_h_cl_correct_eval.conf import model_config
 
 import matplotlib.pyplot as plt
 import matplotlib.markers as mark
 from sklearn.manifold import TSNE
 # Path to the checkpoint
-checkpoint_path = './experiments/skill_prior_learning/kitchen/spirl_DPMM_h_cl_v4/weights/weights_ep99.pth'
+checkpoint_path = './experiments/skill_prior_learning/kitchen/spirl_DPMM_h_cl_correct_eval/weights/weights_ep99.pth'
 
 # Load checkpoint
 checkpoint = torch.load(checkpoint_path)
@@ -185,7 +185,7 @@ plt.xlabel('t-SNE Component 1')
 plt.ylabel('t-SNE Component 2')
 plt.grid(True)
 plt.legend()
-plt.savefig('/home/ubuntu/Mikhail/spirl/DPMM_visualisation_v4.png',bbox_inches='tight')
+plt.savefig('/home/ubuntu/Mikhail/spirl/DPMM_visualisation_correct_eval.png',bbox_inches='tight')
 plt.show()
 
 # Toggle for gaussian distribution of original VAE in other picture
@@ -206,7 +206,7 @@ if sample_gauss_as_other_pic:
     plt.ylabel('t-SNE Component 2')
     plt.grid(True)
     plt.legend()
-    plt.savefig('/home/ubuntu/Mikhail/spirl/Gauss_visualisation_v4.png',bbox_inches='tight')
+    plt.savefig('/home/ubuntu/Mikhail/spirl/Gauss_visualisation_correct_eval.png',bbox_inches='tight')
     plt.show()
 
 def latent_space_analysis(model, num_clusters):
@@ -248,5 +248,5 @@ plt.title('History of clusters')
 plt.xlabel('Epoch')
 plt.ylabel('Number of Clusters')
 plt.grid(True)
-plt.savefig('/home/ubuntu/Mikhail/spirl/Logging_v2.png',bbox_inches='tight')
+plt.savefig('/home/ubuntu/Mikhail/spirl/Logging_correct_eval.png',bbox_inches='tight')
 plt.show()

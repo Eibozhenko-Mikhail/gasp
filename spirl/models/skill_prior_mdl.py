@@ -211,9 +211,10 @@ class SkillPriorMdl(BaseModel, ProbabilisticModel):
                 z = self.compute_learned_prior(self._learned_prior_input(inputs), first_only=True).sample()
             elif self.bnp_model:
                 # z = Gaussian(torch.zeros((1, self._hp.nz_vae*2), device=self.device)).sample()
-                raise RuntimeError("TODO: sample from DPMM, not from Gaussian!")
+                raise RuntimeError("TODO: Wants to sample from Gaussian, despite having DPMM")
             else:
                 z = Gaussian(torch.zeros((1, self._hp.nz_vae*2), device=self.device)).sample()
+                raise RuntimeError("Switched to sampling from gaussian!")
 
             # decode into action plan
             z = z.repeat(self._hp.batch_size, 1)  # this is a HACK flat LSTM decoder can only take batch_size inputs

@@ -280,13 +280,29 @@ class RLTrainer:
     def resume(self, ckpt, path=None):
         path = os.path.join(self._hp.exp_path, 'weights') if path is None else os.path.join(path, 'weights')
         assert ckpt is not None  # need to specify resume epoch for loading checkpoint
+
+
+        ################ - - - HERE - for bnpy need to also load the bnpy model!!! - - - #######################
+
+
         weights_file = CheckpointHandler.get_resume_ckpt_file(ckpt, path)
         # TODO(karl): check whether that actually loads the optimizer too
         self.global_step, start_epoch, _ = \
             CheckpointHandler.load_weights(weights_file, self.agent,
                                            load_step=True, strict=self.args.strict_weight_loading)
         self.agent.load_state(self._hp.exp_path)
+        if hasattr(self.agent, "bnp_model"):
+                print("This agent uses bnp_model, updating weights...")
+                checkpoint = torch.load(weights_file, map_location=self.agent.device)
+                self.agent.bnp_model = checkpoint['DPMM_bnp_model']
+                self.agent.bnp_info_dict = checkpoint['DPMM_bnp_info_dict']
+                self.agent.comp_mu = checkpoint['DPMM_comp_mu']
+                self.agent.comp_var = checkpoint['DPMM_comp_var']
+                self.agent.cluster_logging = checkpoint['DPMM_logging_clusters']
+                print("DPMM Components updated!")
         self.agent.to(self.device)
+
+        ########################################################################################################
         return start_epoch
 
     def print_train_update(self, epoch, agent_outputs, timers):

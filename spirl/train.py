@@ -81,7 +81,7 @@ class ModelTrainer(BaseTrainer):
     def _default_hparams(self):
         default_dict = ParamDict({
             'model': None,
-            'train_Diva_model': True, # THESIS ADJUSTMENT
+            'train_Diva_model':True, # THESIS ADJUSTMENT
             'model_test': None,
             'logger': None,
             'logger_test': None,
@@ -209,6 +209,7 @@ class ModelTrainer(BaseTrainer):
             start = time.time()
             self.model_test.load_state_dict(self.model.state_dict())
             if hasattr(self.model, "bnp_model"):
+                print("Updating bnp_model")
                 self.model_test.bnp_model = self.model.bnp_model
                 self.model_test.bnp_info_dict = self.model.bnp_info_dict
                 self.model_test.comp_mu = self.model.comp_mu
