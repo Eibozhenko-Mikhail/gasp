@@ -81,7 +81,7 @@ class ModelTrainer(BaseTrainer):
     def _default_hparams(self):
         default_dict = ParamDict({
             'model': None,
-            'train_Diva_model':True, # THESIS ADJUSTMENT
+            'train_Diva_model':True, # THESIS ADJUSTMENT - all DPMM based models should have it on TRUE
             'model_test': None,
             'logger': None,
             'logger_test': None,
@@ -197,7 +197,16 @@ class ModelTrainer(BaseTrainer):
 
         ### FIT DPMM at the end of the epoch   
         outputs = torch.stack(output_list)
-        if self._hp.train_Diva_model:
+
+        fit_dpmm = False
+
+
+        if epoch < 25:
+            fit_dpmm = True
+        elif epoch % 3 == 0 and epoch < 75:
+            fit_dpmm = False
+        
+        if self._hp.train_Diva_model and fit_dpmm:
           z = torch.cat([outputs[i] for i in range(0, len(outputs))])
           self.model.fit_dpmm(z)
           self.model.cluster_logging.append(self.model.num_clusters)

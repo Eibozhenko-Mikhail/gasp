@@ -11,6 +11,7 @@ from spirl.rl.components.replay_buffer import UniformReplayBuffer
 from spirl.rl.agents.ac_agent import SACAgent
 from spirl.rl.agents.skill_space_agent import SkillSpaceAgent
 from spirl.models.skill_prior_mdl import SkillPriorMdl
+from spirl.models.CL_SPIRL_DIVA_mdl import SPiRL_DIVAMdl
 from spirl.configs.default_data_configs.kitchen import data_spec
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
@@ -65,10 +66,13 @@ ll_model_params = AttrDict(
 # LL Agent
 ll_agent_config = copy.deepcopy(base_agent_params)
 ll_agent_config.update(AttrDict(
-    model=SkillPriorMdl,
+    model=SPiRL_DIVAMdl,
+    # model=SkillPriorMdl, # Original
     model_params=ll_model_params,
+    # model_checkpoint=os.path.join(os.environ["EXP_DIR"],
+    #                              "skill_prior_learning/kitchen/hierarchical"), 
     model_checkpoint=os.path.join(os.environ["EXP_DIR"],
-                                  "skill_prior_learning/kitchen/hierarchical"),
+                                  "skill_prior_learning/kitchen/spirl_DPMM_h_cl_correct_eval"),
 ))
 
 
