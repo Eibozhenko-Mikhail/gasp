@@ -22,6 +22,7 @@ from spirl.components.checkpointer import load_by_key, freeze_modules
 from spirl.components.data_loader import RandomVideoDataset
 from spirl.utils.pytorch_utils import RepeatedDataLoader
 from spirl.models.CL_SPIRL_DIVA_mdl import SPiRL_DIVAMdl
+from spirl.models.CL_SPIRL_DPMM_mdl import SPiRL_DPMM_Mdl
 from spirl.train import ModelTrainer
 from spirl.components.params import get_args
 from spirl.configs.skill_prior_learning.kitchen.spirl_DPMM_h_cl_correct_eval.conf import model_config
@@ -30,7 +31,7 @@ import matplotlib.pyplot as plt
 import matplotlib.markers as mark
 from sklearn.manifold import TSNE
 # Path to the checkpoint
-checkpoint_path = './experiments/skill_prior_learning/kitchen/spirl_DPMM_h_cl_correct_eval/weights/weights_ep99.pth'
+checkpoint_path = './experiments/skill_prior_learning/kitchen/spirl_DPMM_h_cl_v_04_06/weights/weights_ep99.pth'
 
 # Load checkpoint
 checkpoint = torch.load(checkpoint_path)
@@ -43,7 +44,7 @@ model_config["device"] = "cuda"
 
 # Model recreation
 print("Recreating the model...")
-model = SPiRL_DIVAMdl(model_config)
+model = SPiRL_DPMM_Mdl(model_config)
 model.load_state_dict(model_state_dict)
 model.bnp_model = checkpoint['DPMM_bnp_model']
 model.bnp_info_dict = checkpoint['DPMM_bnp_info_dict']
@@ -185,7 +186,7 @@ plt.xlabel('t-SNE Component 1')
 plt.ylabel('t-SNE Component 2')
 plt.grid(True)
 plt.legend()
-plt.savefig('/home/ubuntu/Mikhail/spirl/DPMM_visualisation_correct_eval.png',bbox_inches='tight')
+plt.savefig('/home/ubuntu/Mikhail/spirl/DPMM_visualisation_v_04_06.png',bbox_inches='tight')
 plt.show()
 
 # Toggle for gaussian distribution of original VAE in other picture
@@ -248,5 +249,5 @@ plt.title('History of clusters')
 plt.xlabel('Epoch')
 plt.ylabel('Number of Clusters')
 plt.grid(True)
-plt.savefig('/home/ubuntu/Mikhail/spirl/Logging_correct_eval.png',bbox_inches='tight')
+plt.savefig('/home/ubuntu/Mikhail/spirl/Logging_spirl_DPMM_h_cl_v_04_06.png',bbox_inches='tight')
 plt.show()

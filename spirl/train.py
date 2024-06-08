@@ -204,12 +204,13 @@ class ModelTrainer(BaseTrainer):
         if epoch < 25:
             fit_dpmm = True
         elif epoch % 3 == 0 and epoch < 75:
-            fit_dpmm = False
+            fit_dpmm = True
+        
+        self.model.cluster_logging.append(self.model.num_clusters)
         
         if self._hp.train_Diva_model and fit_dpmm:
           z = torch.cat([outputs[i] for i in range(0, len(outputs))])
           self.model.fit_dpmm(z)
-          self.model.cluster_logging.append(self.model.num_clusters)
         del outputs, output_list
         
     def val(self):
