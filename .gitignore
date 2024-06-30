@@ -1,6 +1,13 @@
 .idea
 __pycache__
 *.egg-info
+
+.tool-versions
+.env
+.direnv/
+.vscode/
+.mypy_cache/
+dev/
+
+data/
 experiments/
-save/
-d4rl/
