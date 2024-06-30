@@ -1,0 +1,3 @@
+[submodule "d4rl"]
+	path = d4rl
+	url = https://github.com/kpertsch/d4rl
