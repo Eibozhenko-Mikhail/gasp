@@ -1,5 +1,5 @@
 # core
-numpy
+numpy<=1.23  # adjusted
 matplotlib
 pillow
 h5py==2.10.0
@@ -13,9 +13,20 @@ tensorboard==2.1.1
 tensorboardX==2.0
 gym==0.15.4
 pandas
+# adjusted
+protobuf<=3.20
+cython<3
 
 # RL
 wandb
 mpi4py
 # mujoco_py==2.0.2.9
+# adjusted
 mujoco-py==2.1.2.14
+
+# DPNN
+bpny
+
+# dev
+ipython
+mypy
