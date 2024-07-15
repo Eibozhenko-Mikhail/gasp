@@ -15,7 +15,7 @@ def get_args():
     parser.add_argument('--resume', default='', type=str, metavar='PATH',
                         help='path to latest checkpoint (default: none)')
     parser.add_argument('--mode', default='train', type=str,
-                        choices=['train', 'val', 'rollout'],
+                        choices=['train', 'val', 'rollout', 'render'],
                         help='mode of the program (training, validation, or generate rollout)')
 
     # Misc

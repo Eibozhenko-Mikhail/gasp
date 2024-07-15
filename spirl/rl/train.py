@@ -1,3 +1,6 @@
+import cv2
+import imageio
+import numpy as np
 import torch
 import os
 import imp
@@ -15,8 +18,8 @@ from spirl.rl.utils.rollout_utils import RolloutSaver
 from spirl.rl.components.sampler import Sampler
 from spirl.rl.components.replay_buffer import RolloutStorage
 
-WANDB_PROJECT_NAME = 'spirl'
-WANDB_ENTITY_NAME = 'mikhailerox'
+WANDB_PROJECT_NAME = os.environ["WANDB_PROJECT_NAME"]
+WANDB_ENTITY_NAME = os.environ["WANDB_ENTITY_NAME"]
 
 
 class RLTrainer:
@@ -76,6 +79,8 @@ class RLTrainer:
             self.train(start_epoch)
         elif args.mode == 'val':
             self.val()
+        elif args.mode == "render":
+            self.render()
         else:
             self.generate_rollouts()
 
@@ -159,7 +164,7 @@ class RLTrainer:
             with torch.no_grad():
                 with timing("Eval rollout time: "):
                     for _ in range(WandBLogger.N_LOGGED_SAMPLES):   # for efficiency instead of self.args.n_val_samples
-                        val_rollout_storage.append(self.sampler.sample_episode(is_train=False, render=False))
+                        val_rollout_storage.append(self.sampler.sample_episode(is_train=False, render=True))
 
         rollout_stats = val_rollout_storage.rollout_stats()
         if self.is_chef:
@@ -168,6 +173,83 @@ class RLTrainer:
                                        self.logger, log_images=True, step=self.global_step)
             print("Evaluation Avg_Reward: {}".format(rollout_stats.avg_reward))
         del val_rollout_storage
+
+    @staticmethod
+    def _load_model(checkpoint_path: str):
+        from spirl.models.CL_SPIRL_DPMM_mdl import SPiRL_DPMM_Mdl
+        from spirl.configs.skill_prior_learning.kitchen.spirl_DPMM_h_cl_correct_eval.conf import model_config
+        # Load checkpoint
+        checkpoint = torch.load(checkpoint_path, map_location=torch.device('cpu'))
+
+        # State extraction
+        model_state_dict = checkpoint['state_dict']
+
+        model_config["batch_size"] = 124
+
+        # Model recreation
+        print("Recreating the model...")
+        model = SPiRL_DPMM_Mdl(model_config)
+        model.load_state_dict(model_state_dict)
+        model.bnp_model = checkpoint['DPMM_bnp_model']
+        model.bnp_info_dict = checkpoint['DPMM_bnp_info_dict']
+        model.comp_mu = checkpoint['DPMM_comp_mu']
+        model.comp_var = checkpoint['DPMM_comp_var']
+        model.cluster_logging = checkpoint['DPMM_logging_clusters']
+
+        # return model.to("cuda")
+        return model
+
+    @staticmethod
+    def _load_original_model(checkpoint_path: str):
+        from spirl.models.closed_loop_spirl_mdl import ClSPiRLMdl
+        from spirl.configs.skill_prior_learning.kitchen.hierarchical_cl_orig.conf import model_config
+        # Load checkpoint
+        checkpoint = torch.load(checkpoint_path, map_location=torch.device('cpu'))
+
+        # State extraction
+        model_state_dict = checkpoint['state_dict']
+
+        model_config["batch_size"] = 124
+
+        # Model recreation
+        print("Recreating the model...")
+        model = ClSPiRLMdl(model_config)
+        model.load_state_dict(model_state_dict)
+
+        # return model.to("cuda")
+        return model
+
+    def render(self):
+        # model = self._load_model("./experiments/skill_prior_learning/kitchen/spirl_DPMM_h_cl_v_04_06/weights/weights_ep99.pth")
+        # model = self._load_model("./experiments/skill_prior_learning/kitchen/spirl_DPMM_good_clusters/weights/weights_ep99.pth")
+        model = self._load_original_model("./experiments/skill_prior_learning/kitchen/spirl_h_cl_download/weights/weights_ep99.pth")
+
+        render_folder = './renders/original-sampling'
+        with self.agent.val_mode():
+            with torch.no_grad():
+                for num_component in range(len(model.comp_mu) if hasattr(model, "comp_mu") else 1):
+                    print(list(range(len(model.comp_mu) if hasattr(model, "comp_mu") else 1)))
+                    print(num_component)
+                    frames = self.sampler.render(model, num_component)
+                    # Render
+                    print(len(frames))
+                    output_folder = os.path.join(render_folder, f"component-{num_component}")
+                    os.makedirs(output_folder, exist_ok=True)
+                    converted_frames = []
+                    for i, img in enumerate(frames):
+                        img_uint8 = (img * 255).astype(np.uint8)
+                        image_path = os.path.join(output_folder, f'component-{num_component}-frame-{i:02d}.png')
+                        imageio.imwrite(image_path, img_uint8)
+                        converted_frames.append(img_uint8)
+                    video_path = os.path.join(output_folder, f'component-{num_component}.mp4')
+                    frame_height, frame_width, layers = frames[0].shape
+                    video = cv2.VideoWriter(video_path, cv2.VideoWriter_fourcc(*'mp4v'), 10, (frame_width, frame_height))
+                    for frame in converted_frames:
+                        video.write(cv2.cvtColor(frame, cv2.COLOR_RGB2BGR))
+                    video.release()
+                    gif_path = os.path.join(output_folder, f'component-{num_component}.gif')
+                    imageio.mimsave(gif_path, converted_frames, fps=10)
+                    print("renderings saved")
 
     def generate_rollouts(self):
         """Generate rollouts and save to hdf5 files."""
@@ -179,7 +261,7 @@ class RLTrainer:
             with torch.no_grad():
                 for _ in tqdm(range(self.args.n_val_samples)):
                     while True:     # keep producing rollouts until we get a valid one
-                        episode = self.sampler.sample_episode(is_train=False, render=False)
+                        episode = self.sampler.sample_episode(is_train=False, render=True)
                         valid = not hasattr(self.agent, 'rollout_valid') or self.agent.rollout_valid
                         n_total += 1
                         if valid:

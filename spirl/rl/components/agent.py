@@ -78,7 +78,7 @@ class BaseAgent(nn.Module):
             # log rollout videos with info captions
             if 'image' in rollout_storage and self._hp.log_videos:
                 if self._hp.log_video_caption:
-                    vids = [np.stack(add_captions_to_seq(rollout.image, np2obj(rollout.info))).transpose(0, 3, 1, 2)
+                    vids = [np.stack(add_captions_to_seq(rollout.image, np2obj(rollout.info)), ).transpose(0, 3, 1, 2)
                             for rollout in rollout_storage.get()[-logger.n_logged_samples:]]
                 else:
                     vids = [np.stack(rollout.image).transpose(0, 3, 1, 2)
@@ -243,6 +243,10 @@ class HierarchicalAgent(BaseAgent):
         # perform step with low-level policy
         assert self._last_hl_output is not None
         output.update(self.ll_agent.act(self.make_ll_obs(obs_input, self._last_hl_output.action)))
+
+        if hasattr(self.ll_agent.policy.net, "cluster_assignments"):
+            _, hard_assignment = self.ll_agent.policy.net.cluster_assignments(torch.from_numpy(self._last_hl_output.action))
+            output.dpmm_hard_assignment = hard_assignment[0]
 
         return self._remove_batch(output) if len(obs.shape) == 1 else output
 

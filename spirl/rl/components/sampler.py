@@ -1,6 +1,8 @@
+from typing import List
 import numpy as np
 import contextlib
 from collections import deque
+import torch
 
 from spirl.utils.general_utils import listdict2dictlist, AttrDict, ParamDict, obj2np
 from spirl.modules.variational_inference import MultivariateGaussian
@@ -85,14 +87,19 @@ class Sampler:
                             render_obs = self._env.render()
                         obs, reward, done, info = self._env.step(agent_output.action)
                         obs = self._postprocess_obs(obs)
-                        episode.append(AttrDict(
+                        if "dpmm_hard_assignment" in agent_output:
+                            info["dpmm_cluster"] = agent_output.dpmm_hard_assignment + 1
+                        current_episode = AttrDict(
                             observation=self._obs,
                             reward=reward,
                             done=done,
                             action=agent_output.action,
                             observation_next=obs,
                             info=obj2np(info),
-                        ))
+                        )
+                        if "dpmm_hard_assignment" in agent_output:
+                            current_episode.dpmm_cluster = agent_output.dpmm_hard_assignment + 1
+                        episode.append(current_episode)
                         if render:
                             episode[-1].update(AttrDict(image=render_obs))
 
@@ -102,6 +109,82 @@ class Sampler:
         episode[-1].done = True     # make sure episode is marked as done at final time step
 
         return listdict2dictlist(episode)
+    
+    @staticmethod
+    def _sample_component(model,
+               num_samples: int,
+               component: int):
+        """
+        Samples from a dpmm cluster and return the corresponding
+        image space map.
+        :param num_samples: (Int) Number of samples
+        :param current_device: (Int) Device to run the model         
+        """
+        if not hasattr(model, "comp_mu"):
+            dist = torch.distributions.MultivariateNormal(loc=torch.zeros(10), covariance_matrix=torch.eye(10))
+            return dist.sample((num_samples,))
+        mu = model.comp_mu[component]
+        cov = torch.diag_embed(model.comp_var[component])
+        dist = torch.distributions.MultivariateNormal(loc=mu, 
+                                                      covariance_matrix=cov)
+        z = dist.sample((num_samples,))
+        return z
+
+    def render(self, model, num_component) -> List[np.ndarray]:
+        if hasattr(model, "comp_mu"):
+            assert num_component in list(range(len(model.comp_mu)))
+
+        # 8 components overall
+        horizon = 10
+        # Take static mean of each component as z
+        # if hasattr(model, "comp_mu"):
+        #     z = model.comp_mu[num_component].unsqueeze(0)
+        # else:
+        #     z = torch.zeros((1, 10))
+
+        self.init(False)
+        done = False
+        with self._env.val_mode():
+            obs_buffer = [self._obs] * (horizon + 1)
+            render_obs_buffer = [self._env.render()] * (horizon + 1)
+            with model.val_mode():
+                while not done and self._episode_step < self._max_episode_len:
+                    print("Predict...")
+                    # Sample new z from the same component for each iteration
+                    z = self._sample_component(model, 1, num_component)
+                    
+                    # Take the last horizon + 1 states from the buffer, stack
+                    # them together and unsqueeze the batch dimension. Resulting
+                    # shape is (1, horizon + 1, state_dim), (1, 11, 60) for kitchen
+                    inputs = AttrDict(states=torch.from_numpy(np.stack(obs_buffer[-11:])[np.newaxis]))
+                    # Predict actions, remove the batch dimension. Resulting
+                    # shape is (horizon, action_dim), (10, 9) for kitchen
+                    actions = model.decode(z, None, horizon, inputs).numpy()[0]
+
+                    for action in actions:
+                        obs, reward, done, info = self._env.step(action)
+                        obs_buffer.append(obs)
+                        render_obs_buffer.append(self._env.render())
+                        self._obs = obs
+                        self._episode_step += 1
+
+                    # render_obs = self._env.render()
+                    # for i in range(10):
+                    #     agent_output = self._agent.act(self._obs)
+                    #     # obs_input = self._obs[None] if len(self._obs.shape) == 1 else self._obs
+                    #     # agent_output = self._agent.ll_agent.act(self._agent.make_ll_obs(obs_input, self._agent._last_hl_output.action))
+
+                    #     print(type(self._agent))
+                    #     print(type(agent_output), type(agent_output.action), agent_output.action.shape)
+                    #     if agent_output.action is None:
+                    #         break
+                    #     obs, reward, done, info = self._env.step(agent_output.action)
+                    #     render_obs = self._env.render()
+                    #     print(type(render_obs))
+                    #     self._obs = obs
+                    #     self._episode_step += 1
+            return render_obs_buffer
+        
 
     def get_episode_info(self):
         episode_info = AttrDict(episode_reward=self._episode_reward,
@@ -150,6 +233,8 @@ class HierarchicalSampler(Sampler):
                     while hl_step < batch_size or len(ll_experience_batch) <= 1:
                         # perform one rollout step
                         agent_output = self.sample_action(self._obs)
+                        # if agent_output.is_hl_step:
+                        #     print(agent_output.dpmm_hard_assignment)
                         agent_output = self._postprocess_agent_output(agent_output)
                         obs, reward, done, info = self._env.step(agent_output.action)
                         obs = self._postprocess_obs(obs)
