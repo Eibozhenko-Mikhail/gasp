@@ -1,0 +1,1 @@
+from gasp.configs.hrl.maze.base_conf import *

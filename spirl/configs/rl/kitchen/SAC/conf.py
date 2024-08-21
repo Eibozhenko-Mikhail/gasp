@@ -1,1 +1,0 @@
-from spirl.configs.rl.kitchen.base_conf import *

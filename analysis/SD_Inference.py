@@ -8,25 +8,25 @@ import imp
 from itertools import cycle
 import numpy as np
 from typing import List, Callable, Union, Any, TypeVar, Tuple
-from spirl.components.base_model import BaseModel
-from spirl.data.kitchen.src.kitchen_data_loader import D4RLSequenceSplitDataset
-from spirl.utils.general_utils import batch_apply, ParamDict, map_dict
-from spirl.utils.pytorch_utils import get_constant_parameter, ResizeSpatial, RemoveSpatial
-from spirl.models.skill_prior_mdl import SkillPriorMdl, ImageSkillPriorMdl
-from spirl.modules.subnetworks import Predictor, BaseProcessingLSTM, Encoder
-from spirl.modules.variational_inference import MultivariateGaussian
-from spirl.modules.losses import KLDivLoss, NLL, DivaKLDivLoss
-from spirl.utils.general_utils import AttrDict, ParamDict, split_along_axis, get_clipped_optimizer
-from spirl.modules.variational_inference import ProbabilisticModel, Gaussian, MultivariateGaussian, get_fixed_prior, \
+from gasp.components.base_model import BaseModel
+from gasp.data.kitchen.src.kitchen_data_loader import D4RLSequenceSplitDataset
+from gasp.utils.general_utils import batch_apply, ParamDict, map_dict
+from gasp.utils.pytorch_utils import get_constant_parameter, ResizeSpatial, RemoveSpatial
+from gasp.models.skill_prior_mdl import SkillPriorMdl, ImageSkillPriorMdl
+from gasp.modules.subnetworks import Predictor, BaseProcessingLSTM, Encoder
+from gasp.modules.variational_inference import MultivariateGaussian
+from gasp.modules.losses import KLDivLoss, NLL, DivaKLDivLoss
+from gasp.utils.general_utils import AttrDict, ParamDict, split_along_axis, get_clipped_optimizer
+from gasp.modules.variational_inference import ProbabilisticModel, Gaussian, MultivariateGaussian, get_fixed_prior, \
                                                 mc_kl_divergence
-from spirl.components.checkpointer import load_by_key, freeze_modules
-from spirl.components.data_loader import RandomVideoDataset
-from spirl.utils.pytorch_utils import RepeatedDataLoader
-from spirl.models.CL_SPIRL_DIVA_mdl import SPiRL_DIVAMdl
-from spirl.train import ModelTrainer
+from gasp.components.checkpointer import load_by_key, freeze_modules
+from gasp.components.data_loader import RandomVideoDataset
+from gasp.utils.pytorch_utils import RepeatedDataLoader
+from gasp.models.CL_SPIRL_DIVA_mdl import SPiRL_DIVAMdl
+from gasp.train import ModelTrainer
 from torch import autograd
-from spirl.components.params import get_args
-from spirl.configs.skill_prior_learning.kitchen.spirl_DPMM_h_cl_correct_eval.conf import model_config, data_config
+from gasp.components.params import get_args
+from gasp.configs.skill_prior_learning.kitchen.spirl_DPMM_h_cl_correct_eval.conf import model_config, data_config
 import matplotlib.pyplot as plt
 import matplotlib.markers as mark
 from sklearn.manifold import TSNE
