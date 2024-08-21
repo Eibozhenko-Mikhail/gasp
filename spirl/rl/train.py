@@ -15,8 +15,8 @@ from spirl.rl.utils.rollout_utils import RolloutSaver
 from spirl.rl.components.sampler import Sampler
 from spirl.rl.components.replay_buffer import RolloutStorage
 
-WANDB_PROJECT_NAME = 'spirl'
-WANDB_ENTITY_NAME = 'mikhailerox'
+WANDB_PROJECT_NAME = 'YOUR_PROJECT'
+WANDB_ENTITY_NAME = 'YOUR_NAME'
 
 
 class RLTrainer:
@@ -268,7 +268,7 @@ class RLTrainer:
                     logger = WandBLogger(exp_name, WANDB_PROJECT_NAME, entity=WANDB_ENTITY_NAME,
                                          path=self._hp.exp_path, conf=conf)
                 else:
-                    raise NotImplementedError   # TODO implement alternative logging (e.g. TB)
+                    raise NotImplementedError
             return logger
 
     def setup_device(self):
@@ -286,7 +286,6 @@ class RLTrainer:
 
 
         weights_file = CheckpointHandler.get_resume_ckpt_file(ckpt, path)
-        # TODO(karl): check whether that actually loads the optimizer too
         self.global_step, start_epoch, _ = \
             CheckpointHandler.load_weights(weights_file, self.agent,
                                            load_step=True, strict=self.args.strict_weight_loading)

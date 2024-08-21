@@ -1,5 +1,5 @@
 # Generalzed Adaptive Skill Prior Meta-Reinforcement Learning
-
+[[Paper]](docs/resources/Master_s_Thesis_Eibozhenko_GASP_Meta_RL.pdf)
 <p align="center">
 <img src="docs/resources/Teaser.png" width="800">
 </p>
@@ -76,27 +76,48 @@ python3 spirl/rl/train.py --path=spirl/configs/hrl/kitchen/spirl_cl_DPMM --seed=
 
 ### Visualizing learned DPMM distribution
 
-After GASP model is trained, vizualize the latent distribution compared with original gaussian with
+After GASP model is trained, vizualize the latent distribution compared with original gaussian with:
 ```
 python3 analysis/DPMM_vis.py
 ```
 
 ### Visualizing Inference
 
-Another visualization tool implemented allows to project encoded inference onto learned DPMM space - run
+Another visualization tool implemented allows to project encoded inference onto learned DPMM space - execute:
 ```
 python3 analysis/SD_Inference.py
 ```
 
-## Starting to Modify the Code
+## Working with the Code
 
-### Modifying the hyperparameters
+This work is built around the [SPiRL](https://github.com/clvrai/spirl) framework. The differences and code architecture are documented below.
+### GASP adjustments to original architecture
 
+|Feature        | Description        | File |
+|:------------- |:-------------|:-------------|
+| GASP Model | Main framework of DPMM-based Skill Prior learning|[```CL_SPIRL_DPMM_mdl```](spirl/models/CL_SPIRL_DPMM_mdl.py#L22)|
+| DPMM-based Loss | Altered loss computation, involving weighted sum of KL-divergencies |[```DivaKLDivLoss```](spirl/modules/losses.py#L59)|
+| DPMM fitting | Train loop altered for adaptive DPMM fitting |[```ModelTrainer```](spirl/train.py#L30)|
+| Parameters upload | DPMM components for skills alocation |[```RLTrainer```](spirl/rl/train.py#L285)|
+| Influence on RL | Skills allocation to DPMM components |[```HierarchicalAgent```](spirl/rl/components/agent.py#L246)|
+| GASP Configuration   | Configuration for Skill Prior learning phase         | [```spirl_DPMM_h_cl```](spirl/configs/skill_prior_learning/kitchen/spirl_DPMM_h_cl/conf.py#L10) |
+| GASP Meta-RL Configuration| Cofiguration for HRL phase|[```spirl_cl_DPMM```](spirl/configs/hrl/kitchen/spirl_cl_DPMM/conf.py#L10)|
+| DPMM Visualization| Vizualization of DPMM components|[```DPMM_vis```](analysis/DPMM_vis.py#L36)|
+| DPMM Inference | Vizualization of DPMM-based inference|[```SD_Inference```](analysis/SD_Inference.py#L34)|
 
+### Altering the hyperparameters
 
-## Detailed Code Structure Overview
+- Default hyperparameters are defined in [```SkillPriorMdl```](spirl/models/skill_prior_mdl.py#L55), which is a parent class for [```CL_SPIRL_DPMM_mdl```](spirl/models/CL_SPIRL_DPMM_mdl.py#L22) (*nz_enc*, *nz_vae*, *kl_div_weight*, e.t.c.).
+- [```CL_SPIRL_DPMM_mdl```](spirl/models/CL_SPIRL_DPMM_mdl.py#L27) defines Hughes atomic numbers at initialization step and DPMM-related parameters (*b_minNumAtomsForNewComp*, *b_minNumAtomsForTargetComp*, *b_minNumAtomsForRetainComp*).
+
+- Other parameters can be altered in configuration files [```spirl_DPMM_h_cl```](spirl/configs/skill_prior_learning/kitchen/spirl_DPMM_h_cl/conf.py#L10) for Prior Learning Phase and in [```spirl_cl_DPMM```](spirl/configs/hrl/kitchen/spirl_cl_DPMM/conf.py#L10) for Hierarchical Reinforcement Learning respectively (*num_epochs*, *top_of_n_eval*, *policy_model_checkpoint*, e.t.c.). 
+
+### Detailed Code Structure
+
+Our solution follows the original code structure of [SPiRL](https://github.com/clvrai/spirl) which provided for further convinience below:
 ```
 spirl
+
   |- components            # reusable infrastructure for model training
   |    |- base_model.py    # basic model class that all models inherit from
   |    |- checkpointer.py  # handles storing + loading of model checkpoints
@@ -136,47 +157,7 @@ spirl
   |- train.py              # main model training script, builds all components + runs training loop and logging
 ```
 
-The general philosophy is that each new experiment gets a new config file that captures all hyperparameters etc. so that experiments
-themselves are version controllable.
 
-## Datasets
-
-|Dataset        | Link         | Size |
-|:------------- |:-------------|:-----|
-| Maze | [https://drive.google.com/file/d/1pXM-EDCwFrfgUjxITBsR48FqW9gMoXYZ/view?usp=sharing](https://drive.google.com/file/d/1pXM-EDCwFrfgUjxITBsR48FqW9gMoXYZ/view?usp=sharing) | 12GB |
-| Block Stacking |[https://drive.google.com/file/d/1VobNYJQw_Uwax0kbFG7KOXTgv6ja2s1M/view?usp=sharing](https://drive.google.com/file/d/1VobNYJQw_Uwax0kbFG7KOXTgv6ja2s1M/view?usp=sharing)| 11GB|
-| Office Cleanup | [https://drive.google.com/file/d/1yNsTZkefMMvdbIBe-dTHJxgPIRXyxzb7/view?usp=sharing](https://drive.google.com/file/d/1yNsTZkefMMvdbIBe-dTHJxgPIRXyxzb7/view?usp=sharing)| 170MB |
-
-You can download the datasets used for the experiments in the paper with the links above. 
-To download the data via the command line, see example commands [here](spirl/data/).
-
-If you want to generate more data 
-or make other modifications to the data generating procedure, we provide instructions for regenerating the 
-`maze`, `block stacking` and `office` datasets [here](spirl/data/).
-
-
-## Citation
-If you find this work useful in your research, please consider citing:
-```
-@inproceedings{pertsch2020spirl,
-    title={Accelerating Reinforcement Learning with Learned Skill Priors},
-    author={Karl Pertsch and Youngwoon Lee and Joseph J. Lim},
-    booktitle={Conference on Robot Learning (CoRL)},
-    year={2020},
-}
-```
-
-## Acknowledgements
-The model architecture and training code builds on a code base which we jointly developed with [Oleh Rybkin](https://www.seas.upenn.edu/~oleh/) for our previous project on [hierarchial prediction](https://github.com/orybkin/video-gcp).
-
-We also published many of the utils / architectural building blocks in a stand-alone package for easy import into your 
-own research projects: check out the [blox](https://github.com/orybkin/blox-nn) python module. 
-
-
-## Troubleshooting
-
-### Missing key 'completed_tasks' in Kitchen environment
-Please make sure to install [our fork](https://github.com/kpertsch/d4rl) of the D4RL repository, **not** the original D4RL repository. We made a few small changes to the interface, which e.g. allow us to log the reward contributions for each of the subtasks separately.
 
 
 

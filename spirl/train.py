@@ -23,8 +23,8 @@ from spirl.components.trainer_base import BaseTrainer
 from spirl.utils.wandb import WandBLogger
 from spirl.components.params import get_args
 
-WANDB_PROJECT_NAME = 'spirl'
-WANDB_ENTITY_NAME = 'mikhailerox'
+WANDB_PROJECT_NAME = 'YOUR_PROJECT'
+WANDB_ENTITY_NAME = 'YOUR_NAME'
 
 
 class ModelTrainer(BaseTrainer):
