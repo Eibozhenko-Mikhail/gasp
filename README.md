@@ -1,4 +1,4 @@
-# Generalzed Adaptive Skill Prior Meta-Reinforcement Learning
+# GASP Meta-RL: Generalized Adaptive Skill Prior Meta-Reinforcement Learning
 [[Paper]](docs/resources/Master_s_Thesis_Eibozhenko_GASP_Meta_RL.pdf)
 <p align="center">
 <img src="docs/resources/Teaser.png" width="800">
@@ -17,22 +17,23 @@ The proposed solution is based on two frameworks, refer to pages of algorithms m
 ## Requirements
 
 - python 3.7
-- bnpy 1.7.0
 - mujoco 2.0
-- pytorch-lightning 1.9.5
 - Ubuntu 18.04
+- For python requirements see [`requirements.txt`](requirements.txt)
 
 ## Installation Instructions
 
 ### 1. Create and activate a virtual environment, install all requirements
 ```
 # Setup the environment
+
 cd SPIRL_DPMM
 pip3 install virtualenv
 virtualenv -p $(which python3) ./venv
 source ./venv/bin/activate
 
 # Install dependencies and packages
+
 pip3 install -r requirements.txt
 pip3 install -e .
 ```
@@ -41,6 +42,7 @@ pip3 install -e .
 ```
 # Experiments folder stores trained models
 # Data folder stores external data libraries
+
 mkdir ./experiments
 mkdir ./data
 export EXP_DIR=./experiments
