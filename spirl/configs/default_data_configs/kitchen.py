@@ -6,8 +6,7 @@ data_spec = AttrDict(
     dataset_class=D4RLSequenceSplitDataset,
     n_actions=9,
     state_dim=60,
-    env_name="kitchen-mixed-v0",
-    # env_name="simpl-kitchen-v0", # For another task chain, see simpl github for reference
+    env_name="kitchen-mixed-v0", # Change to "kitchen-complete-v0" for complete dataset 
     res=128,
     crop_rand_subseq=True,
 )
