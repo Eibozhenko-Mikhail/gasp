@@ -9,7 +9,7 @@ from spirl.components.evaluator import TopOfNSequenceEvaluator
 
 ########################### Experiment version #########################
 #
-#   This version was created on 04.06
+#   This version was created on 17.07
 #
 #   Differencies from original:
 #   - DPMM

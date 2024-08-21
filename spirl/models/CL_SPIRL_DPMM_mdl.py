@@ -26,13 +26,16 @@ class SPiRL_DPMM_Mdl(SkillPriorMdl):
 
     def __init__(self, params, logger=None):
         super().__init__(params, logger=logger)
+
+        # Hughes hyperparameters
         self.dpmm_param = dict(
             sF=0.1,
-            b_minNumAtomsForNewComp=1200.0,
-            b_minNumAtomsForTargetComp=1440.0,
-            b_minNumAtomsForRetainComp=1440.0,
-        )
+            b_minNumAtomsForNewComp=800.0,
+            b_minNumAtomsForTargetComp=960.0,
+            b_minNumAtomsForRetainComp=960.0,
+        ) 
 
+        # DPMM parameters
         pwd = os.getcwd()
         self.bnp_root = pwd + '/save/bn_model/'
         self.bnp_iterator = cycle(range(2))
@@ -74,7 +77,7 @@ class SPiRL_DPMM_Mdl(SkillPriorMdl):
         return MultivariateGaussian(self.q(inf_input)[:, -1]) 
 
     def forward(self, inputs, use_learned_prior=False):
-        """Forward pass of the SPIRL model.
+        """Forward pass of the SPIRL_DPMM model.
         :arg inputs: dict with 'states', 'actions', 'images' keys from data loader
         :arg use_learned_prior: if True, decodes samples from learned prior instead of posterior, used for RL
         """
@@ -107,9 +110,7 @@ class SPiRL_DPMM_Mdl(SkillPriorMdl):
                     ).to(z.device)).sample()
                     zs_sampled.append(z_sampled)
                 z_component = torch.stack(zs_sampled, dim=0)
-                print("Sampled z shape:", z_component.shape)
                 output.z = z_component
-                print("z should be like:", z.shape)
                 output.z_q = z # for loss computation
             else:
                 print("Validation based on Gauss...")
@@ -128,8 +129,8 @@ class SPiRL_DPMM_Mdl(SkillPriorMdl):
         return output
     
     def loss(self, model_output, inputs):
-        """Loss computation of the SPIRL model.
-        :arg model_output: output of SPIRL model forward pass
+        """Loss computation of the SPIRL_DPMM model.
+        :arg model_output: output of SPIRL_DPMM model forward pass
         :arg inputs: dict with 'states', 'actions', 'images' keys from data loader
         """
 
@@ -142,55 +143,30 @@ class SPiRL_DPMM_Mdl(SkillPriorMdl):
             (Gaussian(model_output.reconstruction, torch.zeros_like(model_output.reconstruction)),
              self._regression_targets(inputs))
 
-        # KL loss distinction (At first epoch initializing DPMM, standart computation:)
-        #######___________________ Experemental Version: ________________########
+        # KL loss distinction (At epoch 0 - initializing DPMM, standart Gauss-based computation:)
+        #######___________________ Final Version: ________________########
 
         if not self.bnp_model:
+            # Gauss based Loss (Default VAE)
             losses.kl_loss = KLDivLoss(self.beta)(model_output.q, model_output.p)
-            # print(" ________________________________________________ ")
-            # print("|                   KL-DIV LOSS                  |")
-            # print("|                                                |")
-            # print("|  Original VAE KL Loss: ----------------- ", round(losses.kl_loss.value.item(), 4))
-            # print("|                                                |")
         else: 
+            # DPMM based Loss (DPMM Prior)
             z = model_output.z_q.detach()          
             comp_mu = self.comp_mu
             comp_var = self.comp_var
             prob_comps, hard_assignment = self.cluster_assignments(z) # prob_comps --> resp, comps --> Z[n]
             _, self.num_clusters = prob_comps.shape
             losses.kl_loss = DivaKLDivLoss(self.beta)(model_output.q.mu, model_output.q.log_sigma, prob_comps, comp_mu, comp_var)
-            # Make comparison:
-            #test = KLDivLoss(self.beta)(model_output.q, model_output.p)
-            # print(" ________________________________________________ ")
-            # print("|                DPMM information                |")
-            # print("|                                                |")
-            # print("|  Currently clusters: ----------------------- ", self.num_clusters)
-            # print("|                                                |")
-            # print("|________________________________________________|")
-            # print("|                   KL-DIV LOSS                  |")
-            # print("|                                                |")
-            # print("|  Original VAE KL Loss: ----------------- ", round(test.value.item(),4))
-            # print("|  DPMM Kldiv loss: ---------------------- ", round(losses.kl_loss.value.item(),4))
-            # print("|                                                |")
-
-
 
         # learned skill prior net loss
         losses.q_hat_loss = self._compute_learned_prior_loss(model_output)
-        # print("|________________________________________________|")
-        # print("|                Other LOSSes                    |")
-        # print("|                                                |")
-        # print("|  Computed Prior loss: ------------------ ", round(losses.q_hat_loss.value.item(),4))
-        # print("|  Reconstruction loss: ------------------ ", round(losses.rec_mse.value.item(),4))
 
         # Optionally update beta
         if self.training and self._hp.target_kl is not None:
             self._update_bedta(losses.kl_loss.value)
 
         losses.total = self._compute_total_loss(losses)
-        # print("|                                                |")
-        # print("|  TOTAL LOSS: --------------------------- ", round(losses.total.value.item(),4))
-        # print("|________________________________________________|")
+
         return losses
     
     def fit_dpmm(self, z):

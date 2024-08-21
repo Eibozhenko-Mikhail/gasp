@@ -65,7 +65,10 @@ class ModelTrainer(BaseTrainer):
         self.optimizer = self.get_optimizer_class()(filter(lambda p: p.requires_grad, self.model.parameters()), lr=self._hp.lr)
         self.evaluator = self._hp.evaluator(self._hp, self.log_dir, self._hp.top_of_n_eval,
                                             self._hp.top_comp_metric, tb_logger=self.logger_test)
-        
+        # for DPMM Training:
+        self.next_DPMM_fitting_epoch = 0
+
+
         # load model params from checkpoint
         self.global_step, start_epoch = 0, 0
         if args.resume or conf.ckpt_path is not None:
@@ -195,18 +198,20 @@ class ModelTrainer(BaseTrainer):
             del output, losses
             self.global_step = self.global_step + 1
 
-        ### FIT DPMM at the end of the epoch   
+        ### FIT DPMM at the end of the epoch  
         outputs = torch.stack(output_list)
 
         fit_dpmm = False
 
+        # Adaptive Fitting
+        if epoch == self.next_DPMM_fitting_epoch:
+            fit_dpmm = True
+            interval = int(np.exp(4*epoch/self._hp.num_epochs)//1)
+            self.next_DPMM_fitting_epoch += interval
 
-        if epoch < 25:
-            fit_dpmm = True
-        elif epoch % 3 == 0 and epoch < 75:
-            fit_dpmm = True
-        
-        self.model.cluster_logging.append(self.model.num_clusters)
+
+        if hasattr(self.model, "cluster_logging"):
+            self.model.cluster_logging.append(self.model.num_clusters)
         
         if self._hp.train_Diva_model and fit_dpmm:
           z = torch.cat([outputs[i] for i in range(0, len(outputs))])

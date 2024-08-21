@@ -1,29 +1,16 @@
 import os
 
-from spirl.models.CL_SPIRL_DPMM_mdl import SPiRL_DPMM_Mdl
+from spirl.models.closed_loop_spirl_mdl import ClSPiRLMdl
 from spirl.components.logger import Logger
 from spirl.utils.general_utils import AttrDict
 from spirl.configs.default_data_configs.kitchen import data_spec
 from spirl.components.evaluator import TopOfNSequenceEvaluator
 
-
-########################### Experiment version #########################
-#
-#   This version was created on 04.06
-#
-#   Differencies from original:
-#   - DPMM
-#   - Correct evaluation
-#   - Adaptive DPMM fitting
-#   - b_minNumAtomsForNewComp=1200.0,
-#   - b_minNumAtomsForTargetComp=1440.0,
-#   - b_minNumAtomsForRetainComp=1440.0,
-
 current_dir = os.path.dirname(os.path.realpath(__file__))
 
 
 configuration = {
-    'model': SPiRL_DPMM_Mdl, 
+    'model': ClSPiRLMdl,
     'logger': Logger,
     'data_dir': '.',
     'epoch_cycles_train': 50,

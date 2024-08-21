@@ -29,9 +29,10 @@ from spirl.configs.skill_prior_learning.kitchen.spirl_DPMM_h_cl_correct_eval.con
 
 import matplotlib.pyplot as plt
 import matplotlib.markers as mark
+from matplotlib.ticker import MaxNLocator
 from sklearn.manifold import TSNE
 # Path to the checkpoint
-checkpoint_path = './experiments/skill_prior_learning/kitchen/spirl_DPMM_h_cl_v_04_06/weights/weights_ep99.pth'
+checkpoint_path = './experiments/skill_prior_learning/kitchen/spirl_DPMM_h_cl_v_19_07/weights/weights_ep65.pth'
 
 # Load checkpoint
 checkpoint = torch.load(checkpoint_path)
@@ -123,9 +124,6 @@ def sample_component(model,
         dist = torch.distributions.MultivariateNormal(loc=mu, 
                                                       covariance_matrix=cov)
         z = dist.sample((num_samples,))
-        print('________Cluster ', component+1, '_______')
-        print(mu)
-        print(cov)
         return z
 
 def sample_gauss_component(model,
@@ -139,9 +137,7 @@ def sample_gauss_component(model,
         cov = torch.eye(*model.comp_var[0].size(), out=torch.empty_like(model.comp_var[0]))
         dist = torch.distributions.MultivariateNormal(loc=mu, 
                                                       covariance_matrix=cov)
-        print('________Gauss_______')
-        print(mu)
-        print(cov)
+
         z = dist.sample((num_samples,))
 
         return z
@@ -151,7 +147,7 @@ def sample_gauss_component(model,
 data_cloud = []
 num_clusters = len(model.comp_mu)
 
-sample_gauss = True # Toggle for additional original Gauss VAE sampling
+sample_gauss = False # Toggle for additional original Gauss VAE sampling
 sample_gauss_as_other_pic = False # Toggle for additional original Gauss VAE sampling in the different picture
 
 num_samples = 120
@@ -167,7 +163,7 @@ tsne = TSNE(n_components=2, random_state=0)
 X_tsne = tsne.fit_transform(data_cloud)
 
 # Setting colors (14 max, extend by need)
-colors = ['blue', 'red', 'green', 'orange', 'purple','brown','pink', 'gray', 'olive', 'cyan', 'lime', 'blueviolet','dodgerblue','salmon']
+colors = ['blue', 'red', 'green', 'orange', 'purple','brown','pink', 'gray', 'salmon', 'blueviolet', 'dodgerblue', 'blueviolet','dodgerblue','salmon']
 cluster_sizes = [num_samples] * num_clusters  
 
 # Plotting datapoints, assigning cluster colors
@@ -186,7 +182,7 @@ plt.xlabel('t-SNE Component 1')
 plt.ylabel('t-SNE Component 2')
 plt.grid(True)
 plt.legend()
-plt.savefig('/home/ubuntu/Mikhail/spirl/DPMM_visualisation_v_04_06.png',bbox_inches='tight')
+plt.savefig('/home/ubuntu/Mikhail/spirl/DPMM_visualisation_19_07.png',bbox_inches='tight')
 plt.show()
 
 # Toggle for gaussian distribution of original VAE in other picture
@@ -206,48 +202,78 @@ if sample_gauss_as_other_pic:
     plt.xlabel('t-SNE Component 1')
     plt.ylabel('t-SNE Component 2')
     plt.grid(True)
-    plt.legend()
-    plt.savefig('/home/ubuntu/Mikhail/spirl/Gauss_visualisation_correct_eval.png',bbox_inches='tight')
+    plt.savefig('/home/ubuntu/Mikhail/spirl/Gauss_vis.png',bbox_inches='tight')
     plt.show()
 
 def latent_space_analysis(model, num_clusters):
-    KL_divergence = []
-    Mah_distances = []
-    Euq_distances = []
     mu = model.comp_mu
     var = model.comp_var
     gauss_cov=torch.eye(*model.comp_var[0].size(), out=torch.empty_like(model.comp_var[0]))
     gauss_mu=torch.zeros_like(model.comp_mu[0])
     dist_gauss = torch.distributions.MultivariateNormal(loc=gauss_mu, 
                                                             covariance_matrix=gauss_cov)
+    Bh_distances = np.zeros(shape=(num_clusters,num_clusters))
+    Euq_distances = np.zeros(shape=(num_clusters,num_clusters))
+    
     for i in range(0, num_clusters):
-         dist_i = torch.distributions.MultivariateNormal(loc=model.comp_mu[i], 
-                                                            covariance_matrix=torch.diag_embed(model.comp_var[i]))
-         KL_divergence.append(torch.distributions.kl.kl_divergence(dist_i,dist_gauss))
+        dist_i = torch.distributions.MultivariateNormal(loc=model.comp_mu[i], 
+                                                                    covariance_matrix=torch.diag_embed(model.comp_var[i]))
+        for j in range(0, num_clusters):
+            if j!=i:
+                dist_j = torch.distributions.MultivariateNormal(loc=model.comp_mu[j], 
+                                                                    covariance_matrix=torch.diag_embed(model.comp_var[j]))
+                Bh_distances[i,j] = bhattacharyya(model.comp_mu[i], model.comp_mu[j], torch.diag_embed(model.comp_var[i]), torch.diag_embed(model.comp_var[j]))
 
-         mahalanobis = torch.sqrt(torch.matmul(model.comp_mu[i].T, torch.matmul(torch.inverse(torch.diag_embed(model.comp_var[i])), model.comp_mu[i])))
-         Mah_distances.append(mahalanobis)
+                Euq_distances[i,j] = np.linalg.norm(model.comp_mu[i]-model.comp_mu[j])
+            else:
+                Bh_distances[i,j] = bhattacharyya(model.comp_mu[i], gauss_mu, torch.diag_embed(model.comp_var[i]), gauss_cov)
 
-         euqlid = torch.sqrt(torch.matmul(model.comp_mu[i].T, model.comp_mu[i]))
-         Euq_distances.append(euqlid)
+                Euq_distances[i,j] = np.linalg.norm(model.comp_mu[i]-gauss_mu)
 
-    return Mah_distances, Euq_distances, KL_divergence
+    return Euq_distances, Bh_distances
 
-Mah,Euq,KL = latent_space_analysis(model=model, num_clusters=num_clusters)
+def bhattacharyya(mu_p, mu_q, Sigma_p, Sigma_q):
+    mean_diff = mu_p - mu_q
+    
+    Sigma_avg = (Sigma_p + Sigma_q) / 2
+    
+    Sigma_avg_inv = torch.inverse(Sigma_avg)
+    
+    term1 = 0.125 * (mean_diff @ Sigma_avg_inv @ mean_diff.T)
+    print(mu_p,mu_q,Sigma_p, Sigma_q)
+    det_Sigma_p = torch.det(Sigma_p)
+    det_Sigma_q = torch.det(Sigma_q)
+    det_Sigma_avg = torch.det(Sigma_avg)
+    
+    term2 = 0.5 * torch.log(det_Sigma_avg / torch.sqrt(det_Sigma_p * det_Sigma_q))
+    
+    # Compute the Bhattacharyya distance
+    distance = term1 + term2
+    
+    return distance.item()
 
-print(" ____________________|CLuster Analysis|_________________")
-print("|_______________________________________________________|")
-print("|_C_|_____Euqlid_____|___Mahalanobis__|______KL_DIV_____|")
-print("|                                                       |")
-for i in range(0, num_clusters):
-     print("|",i+1,"|",Euq[i],"|",Mah[i],"|",KL[i],"|")
-print("|_______________________________________________________|")
+
+#Euq,Bh = latent_space_analysis(model=model, num_clusters=num_clusters)
+
+#for i in range(0, num_clusters):
+#    for j in range(0, num_clusters):
+#         print("Euqlidian distance between cluster ", i+1, " and ", j+1, " is ", np.round(Euq[i,j],4))
+
+
+#print("_____________________")
+
+#for i in range(0, num_clusters):
+#    for j in range(0, num_clusters):
+#        print("Bhattacharyya distance between cluster ", i+1, " and ", j+1, " is ", np.round(Bh[i,j],4))
+
 
 plt.figure()
+ax = plt.figure().gca()
+ax.yaxis.set_major_locator(MaxNLocator(integer=True))
 plt.plot(range(len(model.cluster_logging)), model.cluster_logging,linestyle='-')
 plt.title('History of clusters')
 plt.xlabel('Epoch')
 plt.ylabel('Number of Clusters')
 plt.grid(True)
-plt.savefig('/home/ubuntu/Mikhail/spirl/Logging_spirl_DPMM_h_cl_v_04_06.png',bbox_inches='tight')
+plt.savefig('/home/ubuntu/Mikhail/spirl/Logging_spirl_DPMM_19_07.png',bbox_inches='tight')
 plt.show()

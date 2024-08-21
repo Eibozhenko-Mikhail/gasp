@@ -59,11 +59,14 @@ class KLDivLoss(Loss):
 class DivaKLDivLoss(Loss):
     # Actual DIVA KL Divergence part
     def compute(self, mu, log_sigma, prob_comps, comp_mu, comp_var):
-
+        """
+        :arg inputs: mu, log_sigma of encoder, probabilistic assignments, current DPMM parameters mu and var
+        """
         # We consider only probabilistic assignments, not hard ones
         # get a distribution of the latent variables 
-        var = torch.exp(log_sigma)**2
+        var = torch.exp(2*log_sigma)
         # batch_shape [batch_size], event_shape [latent_dim]
+        
         # Computing the Multivariate distributions:
         dist = torch.distributions.MultivariateNormal(loc=mu, 
                                                         covariance_matrix=torch.diag_embed(var))

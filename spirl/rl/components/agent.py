@@ -72,7 +72,6 @@ class BaseAgent(nn.Module):
     def log_outputs(self, logging_stats, rollout_storage, logger, log_images, step):
         """Visualizes/logs all training outputs."""
         logger.log_scalar_dict(logging_stats, prefix='train' if self._is_train else 'val', step=step)
-
         if log_images:
             assert rollout_storage is not None      # need rollout data for image logging
             # log rollout videos with info captions
@@ -243,6 +242,10 @@ class HierarchicalAgent(BaseAgent):
         # perform step with low-level policy
         assert self._last_hl_output is not None
         output.update(self.ll_agent.act(self.make_ll_obs(obs_input, self._last_hl_output.action)))
+
+        # Tracking the original component responsible for this action 
+        _, hard_assignment = self.ll_agent.policy.net.cluster_assighnments(torch.from_numpy(self._last_hl_output.action))
+        output.dpmm_hard_assignment = hard_assignment[0]
 
         return self._remove_batch(output) if len(obs.shape) == 1 else output
 

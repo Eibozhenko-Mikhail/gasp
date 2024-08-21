@@ -87,6 +87,7 @@ class SkillPriorMdl(BaseModel, ProbabilisticModel):
         default_dict.update({
             'reconstruction_mse_weight': 1.,    # weight of MSE reconstruction loss
             'kl_div_weight': 1.,                # weight of KL divergence loss
+            'kl_div_prior_weight': 1.,          # weight of KL divergence prior-encoder loss
             'target_kl': None,                  # if not None, adds automatic beta-tuning to reach target KL divergence
         })
 
@@ -313,7 +314,8 @@ class SkillPriorMdl(BaseModel, ProbabilisticModel):
             loss = NLL(breakdown=0)(model_output.q_hat, model_output.z_q.detach())
         else:
             # KL (q(z|a) || p(z|s0))
-            loss = KLDivLoss(breakdown=0)(model_output.q.detach(), model_output.q_hat)
+            loss = KLDivLoss(breakdown=0)(model_output.q_hat, model_output.q.detach()) # Switched KL
+            print("KL switched")
         # aggregate loss breakdown for each of the priors in the ensemble
         loss.breakdown = torch.stack([chunk.mean() for chunk in torch.chunk(loss.breakdown, self._hp.n_prior_nets)])
         return loss

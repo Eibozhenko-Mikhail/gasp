@@ -9,15 +9,15 @@ from spirl.components.evaluator import TopOfNSequenceEvaluator
 
 ########################### Experiment version #########################
 #
-#   This version was created on 04.06
+#   This version was created on 14.07
 #
 #   Differencies from original:
 #   - DPMM
 #   - Correct evaluation
 #   - Adaptive DPMM fitting
-#   - b_minNumAtomsForNewComp=1200.0,
-#   - b_minNumAtomsForTargetComp=1440.0,
-#   - b_minNumAtomsForRetainComp=1440.0,
+#   - b_minNumAtomsForNewComp=400.0, - Specifically for testing this feature
+#   - b_minNumAtomsForTargetComp=500.0,
+#   - b_minNumAtomsForRetainComp=500.0,
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 

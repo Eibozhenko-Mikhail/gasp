@@ -9,7 +9,7 @@ from spirl.components.evaluator import TopOfNSequenceEvaluator
 
 ########################### Experiment version #########################
 #
-#   This version was created on 04.06
+#   This version was created on 11.06
 #
 #   Differencies from original:
 #   - DPMM
@@ -18,6 +18,7 @@ from spirl.components.evaluator import TopOfNSequenceEvaluator
 #   - b_minNumAtomsForNewComp=1200.0,
 #   - b_minNumAtomsForTargetComp=1440.0,
 #   - b_minNumAtomsForRetainComp=1440.0,
+#   - Training on complete kitchen dataset
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 

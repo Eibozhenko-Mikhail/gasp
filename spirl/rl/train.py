@@ -282,7 +282,7 @@ class RLTrainer:
         assert ckpt is not None  # need to specify resume epoch for loading checkpoint
 
 
-        ################ - - - HERE - for bnpy need to also load the bnpy model!!! - - - #######################
+        ##################### - - - Updating DPMM parameters for HRL experiments - - - ########################
 
 
         weights_file = CheckpointHandler.get_resume_ckpt_file(ckpt, path)
