@@ -11,6 +11,8 @@ torch==1.9.0
 torchvision==0.10.0
 tensorboard==2.1.1
 tensorboardX==2.0
+bnpy==0.1.7
+pytorch-lightning==1.9.5
 gym==0.15.4
 pandas
 

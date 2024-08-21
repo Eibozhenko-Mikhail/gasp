@@ -30,6 +30,7 @@ from spirl.configs.skill_prior_learning.kitchen.spirl_DPMM_h_cl_correct_eval.con
 import matplotlib.pyplot as plt
 import matplotlib.markers as mark
 from sklearn.manifold import TSNE
+
 # Path to the checkpoint
 checkpoint_path = './experiments/skill_prior_learning/kitchen/spirl_DPMM_h_cl_correct_eval/weights/weights_ep99.pth'
 

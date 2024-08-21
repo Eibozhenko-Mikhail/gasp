@@ -18,7 +18,7 @@ see [here](../../block_stacking/hierarchical_cl/README.md).
 
 To train the SPiRL model with closed-loop action decoder on the kitchen environment, run the following command:
 ```
-python3 spirl/train.py --path=spirl/configs/skill_prior_learning/kitchen/spirl_DPMM_h_cl --val_data_size=160
+python3 spirl/train.py --path=spirl/configs/skill_prior_learning/kitchen/spirl_DPMM_h_cl_v_19_07 --val_data_size=160
 ```
 
 To train a downstream task policy with RL using the closed-loop SPiRL model we just trained, run the following command:

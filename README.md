@@ -1,169 +1,97 @@
-# Accelerating Reinforcement Learning with Learned Skill Priors
-#### [[Project Website]](https://clvrai.github.io/spirl/) [[Paper]](https://arxiv.org/abs/2010.11944)
+# Generalzed Adaptive Skill Prior Meta-Reinforcement Learning
 
-[Karl Pertsch](https://kpertsch.github.io/)<sup>1</sup>, [Youngwoon Lee](https://youngwoon.github.io/)<sup>1</sup>, 
-[Joseph Lim](https://www.clvrai.com/)<sup>1</sup>
-
-<sup>1</sup>CLVR Lab, University of Southern California 
-
-<a href="https://clvrai.github.io/spirl/">
 <p align="center">
-<img src="docs/resources/spirl_teaser.png" width="800">
+<img src="docs/resources/Teaser.png" width="800">
 </p>
-</img></a>
+</img>
 
-This is the official PyTorch implementation of the paper "**Accelerating Reinforcement Learning with Learned Skill Priors**"
-(CoRL 2020).
+This page is dedicated to implementation of "**Generalized Adaptive Skill Prior Meta-Reinforcement Learning**" algorithm in the context of final Master Thesis for chair of Robotics, Artificial Intelligence and Real-time Systems at TUM School of Computation, Information and Technology authored by Mikhail Eibozhenko.
 
-## Updates
-- **[Feb 2022]**: added [pre-trained models](spirl/data/pretrained_models.md) for kitchen and maze environments
-- **[Jul 2021]**: added robotic office cleanup environment 
-(see [details & installation here](spirl/data/office/README.md))
-- **[Apr 2021]**: extended improved SPiRL version to support image-based observations 
-(see [example commands](spirl/configs/skill_prior_learning/block_stacking/hierarchical_cl/README.md))
-- **[Mar 2021]**: added an improved version of SPiRL with closed-loop skill decoder 
-(see [example commands](spirl/configs/skill_prior_learning/kitchen/hierarchical_cl/README.md))
+## Acknowledges
+
+The proposed solution is based on two frameworks, refer to pages of algorithms mentioned below for more information:
+- [SPiRL](https://github.com/clvrai/spirl) - Skill-Prior framework for Reinforcement Learning acceleration
+- [DIVA](https://github.com/Ghiara/DIVA) - VAE-based non-parametric Latent space clustering 
+
 
 ## Requirements
 
-- python 3.7+
-- mujoco 2.0 (for RL experiments)
+- python 3.7
+- bnpy 1.7.0
+- mujoco 2.0
+- pytorch-lightning 1.9.5
 - Ubuntu 18.04
 
 ## Installation Instructions
 
-Create a virtual environment and install all required packages.
+### 1. Create and activate a virtual environment, install all requirements
 ```
-cd spirl
+# Setup the environment
+cd SPIRL_DPMM
 pip3 install virtualenv
 virtualenv -p $(which python3) ./venv
 source ./venv/bin/activate
 
-# Install dependencies and package
+# Install dependencies and packages
 pip3 install -r requirements.txt
 pip3 install -e .
 ```
 
-Set the environment variables that specify the root experiment and data directories. For example: 
+### 2. Define environment variables to specify the root experiment and data directories
 ```
+# Experiments folder stores trained models
+# Data folder stores external data libraries
 mkdir ./experiments
 mkdir ./data
 export EXP_DIR=./experiments
 export DATA_DIR=./data
 ```
 
-Finally, install **our fork** of the [D4RL benchmark](https://github.com/kpertsch/d4rl) repository by following its installation instructions.
-It will provide both, the kitchen environment as well as the training data for the skill prior model in kitchen and maze environment.
+### 3. Install the Fork of D4RL benchmark
 
-## Example Commands
-All results will be written to [WandB](https://www.wandb.com/). Before running any of the commands below, 
+Follow the [D4RL Fork link](https://github.com/kpertsch/d4rl) and install the fork according to instructions.
+This fork includes new key 'completed_tasks' in Kitchen environment and **neccessary for correct RL phase**.
+
+### 4. Log in to WandB to track results
+
+[WandB](https://www.wandb.com/) is used for **logging the training process**. Before running any of the commands below, 
 create an account and then change the WandB entity and project name at the top of [train.py](spirl/train.py) and
 [rl/train.py](spirl/rl/train.py) to match your account.
 
-To train a skill prior model for the kitchen environment, run:
-```
-python3 spirl/train.py --path=spirl/configs/skill_prior_learning/kitchen/hierarchical_cl --val_data_size=160
-```
-**Note**: You can skip this step by downloading our pre-trained skill prior models -- see [instructions here](spirl/data/pretrained_models.md).
+## Main Commands
 
-For training a SPIRL agent on the kitchen environment using the pre-trained skill prior from above, run:
+### Training Generalized Adaptive Skill Prior
+
+To train a **Generalized Adaptive Skill Prior** model, run:
 ```
-python3 spirl/rl/train.py --path=spirl/configs/hrl/kitchen/spirl_cl --seed=0 --prefix=SPIRL_kitchen_seed0
+python3 spirl/train.py --path=spirl/configs/skill_prior_learning/kitchen/spirl_DPMM_h_cl --val_data_size=160
 ```
 
-In both commands, `kitchen` can be replaced with `maze / block_stacking` to run on the respective environment. Before training models
-on these environments, the corresponding datasets need to be downloaded (the kitchen dataset gets downloaded automatically) 
--- download links are provided below.
-Additional commands for training baseline models / agents are also provided below. 
+### Training GASP Meta-RL
 
-### Baseline Commands
-
-- Train **Single-step action prior**:
+After GASP model is trained, to train **GASP Meta-RL** agent on the kitchen environment, run:
 ```
-python3 spirl/train.py --path=spirl/configs/skill_prior_learning/kitchen/flat --val_data_size=160
+python3 spirl/rl/train.py --path=spirl/configs/hrl/kitchen/spirl_cl_DPMM --seed=0 --prefix=GASP_kitchen_seed0
 ```
 
-- Run **Vanilla SAC**:
+### Visualizing learned DPMM distribution
+
+After GASP model is trained, vizualize the latent distribution compared with original gaussian with
 ```
-python3 spirl/rl/train.py --path=spirl/configs/rl/kitchen/SAC --seed=0 --prefix=SAC_kitchen_seed0
+python3 analysis/DPMM_vis.py
 ```
 
-- Run **SAC w/ single-step action prior**:
-```
-python3 spirl/rl/train.py --path=spirl/configs/rl/kitchen/prior_initialized/flat_prior/ --seed=0 --prefix=flatPrior_kitchen_seed0
-```
+### Visualizing Inference
 
-- Run **BC + finetune**:
+Another visualization tool implemented allows to project encoded inference onto learned DPMM space - run
 ```
-python3 spirl/rl/train.py --path=spirl/configs/rl/kitchen/prior_initialized/bc_finetune/ --seed=0 --prefix=bcFinetune_kitchen_seed0
+python3 analysis/SD_Inference.py
 ```
-
-- Run **Skill Space Policy w/o prior**:
-```
-python3 spirl/rl/train.py --path=spirl/configs/hrl/kitchen/no_prior/ --seed=0 --prefix=SSP_noPrior_kitchen_seed0
-```
-
-Again, all commands can be run on `maze / block stacking` by replacing `kitchen` with the respective environment in the paths
-(after downloading the datasets).
-
 
 ## Starting to Modify the Code
 
 ### Modifying the hyperparameters
-The default hyperparameters are defined in the respective model files, e.g. in [```skill_prior_mdl.py```](spirl/models/skill_prior_mdl.py#L47)
-for the SPIRL model. Modifications to these parameters can be defined through the experiment config files (passed to the respective
-command via the `--path` variable). For an example, see [```kitchen/hierarchical/conf.py```](spirl/configs/skill_prior_learning/kitchen/hierarchical/conf.py).
 
-
-### Adding a new dataset for model training
-All code that is dataset-specific should be placed in a corresponding subfolder in `spirl/data`. 
-To add a data loader for a new dataset, the `Dataset` classes from [```data_loader.py```](spirl/components/data_loader.py) need to be subclassed
-and the `__getitem__` function needs to be overwritten to load a single data sample. The output `dict` should include the following
-keys:
-
-```
-dict({
-    'states': (time, state_dim)                 # state sequence (for state-based prior inputs)
-    'actions': (time, action_dim)               # action sequence (as skill input for training prior model)
-    'images':  (time, channels, width, height)  # image sequence (for image-based prior inputs)
-})
-```
-
-All datasets used with the codebase so far have been based on `HDF5` files. The `GlobalSplitDataset` provides functionality to read all
-HDF5-files in a directory and split them in `train/val/test` based on percentages. The `VideoDataset` class provides
-many functionalities for manipulating sequences, like randomly cropping subsequences, padding etc.
-
-### Adding a new RL environment
-To add a new RL environment, simply define a new environent class in `spirl/rl/envs` that inherits from the environment interface
-in [```spirl/rl/components/environment.py```](spirl/rl/components/environment.py).
-
-
-### Modifying the skill prior model architecture
-Start by defining a model class in the `spirl/models` directory that inherits from the `BaseModel` or `SkillPriorMdl` class. 
-The new model needs to define the architecture in the constructor (e.g. by overwriting the `build_network()` function), 
-implement the forward pass and loss functions,
-as well as model-specific logging functionality if desired. For an example, see [```spirl/models/skill_prior_mdl.py```](spirl/models/skill_prior_mdl.py).
-
-Note, that most basic architecture components (MLPs, CNNs, LSTMs, Flow models etc) are defined in `spirl/modules` and can be 
-conveniently reused for easy architecture definitions. Below are some links to the most important classes.
-
-|Component        | File         | Description |
-|:------------- |:-------------|:-------------|
-| MLP | [```Predictor```](spirl/modules/subnetworks.py#L33) | Basic N-layer fully-connected network. Defines number of inputs, outputs, layers and hidden units. |
-| CNN-Encoder | [```ConvEncoder```](spirl/modules/subnetworks.py#L66) | Convolutional encoder, number of layers determined by input dimensionality (resolution halved per layer). Number of channels doubles per layer. Returns encoded vector + skip activations. |
-| CNN-Decoder | [```ConvDecoder```](spirl/modules/subnetworks.py#L145) | Mirrors architecture of conv. encoder. Can take skip connections as input, also versions that copy pixels etc. |
-| Processing-LSTM | [```BaseProcessingLSTM```](spirl/modules/recurrent_modules.py#L70) | Basic N-layer LSTM for processing an input sequence. Produces one output per timestep, number of layers / hidden size configurable.|
-| Prediction-LSTM | [```RecurrentPredictor```](spirl/modules/recurrent_modules.py#L241) | Same as processing LSTM, but for autoregressive prediction. |
-| Mixture-Density Network | [```MDN```](spirl/modules/mdn.py#L10) | MLP that outputs GMM distribution. |
-| Normalizing Flow Model | [```NormalizingFlowModel```](spirl/modules/flow_models.py#L9) | Implements normalizing flow model that stacks multiple flow blocks. Implementation for RealNVP block provided. |
-
-### Adding a new RL algorithm
-The core RL algorithms are implemented within the `Agent` class. For adding a new algorithm, a new file needs to be created in
-`spirl/rl/agents` and [```BaseAgent```](spirl/rl/components/agent.py#L19) needs to be subclassed. In particular, any required
-networks (actor, critic etc) need to be constructed and the `update(...)` function needs to be overwritten. For an example, 
-see the SAC implementation in [```SACAgent```](spirl/rl/agents/ac_agent.py#L67).
-
-The main SPIRL skill prior regularized RL algorithm is implemented in [```ActionPriorSACAgent```](spirl/rl/agents/prior_sac_agent.py#L12).
 
 
 ## Detailed Code Structure Overview

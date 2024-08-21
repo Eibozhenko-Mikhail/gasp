@@ -1,16 +1,28 @@
 import os
 
-from spirl.models.CL_SPIRL_DIVA_mdl import SPiRL_DIVAMdl
+from spirl.models.CL_SPIRL_DPMM_mdl import SPiRL_DPMM_Mdl
 from spirl.components.logger import Logger
 from spirl.utils.general_utils import AttrDict
 from spirl.configs.default_data_configs.kitchen import data_spec
 from spirl.components.evaluator import TopOfNSequenceEvaluator
 
+
+########################### Latest version #########################
+#
+#   This version was created on 31.07
+#
+#   Differences from SPiRL:
+#   - DPMM
+#   - Adaptive DPMM fitting
+#   - b_minNumAtomsForNewComp=800.0,
+#   - b_minNumAtomsForTargetComp=960.0,
+#   - b_minNumAtomsForRetainComp=960.0, (Change these parameters in models/SPiRL_DPMM_Mdl)
+
 current_dir = os.path.dirname(os.path.realpath(__file__))
 
 
 configuration = {
-    'model': SPiRL_DIVAMdl, 
+    'model': SPiRL_DPMM_Mdl, 
     'logger': Logger,
     'data_dir': '.',
     'epoch_cycles_train': 50,

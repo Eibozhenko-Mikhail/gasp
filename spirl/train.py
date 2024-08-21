@@ -84,7 +84,7 @@ class ModelTrainer(BaseTrainer):
     def _default_hparams(self):
         default_dict = ParamDict({
             'model': None,
-            'train_Diva_model':True, # THESIS ADJUSTMENT - all DPMM based models should have it on TRUE
+            'train_Diva_model':True, # GASP ADJUSTMENT - all DPMM based models should have it on TRUE
             'model_test': None,
             'logger': None,
             'logger_test': None,
@@ -340,8 +340,6 @@ class ModelTrainer(BaseTrainer):
         if torch.cuda.device_count() > 1:
             raise ValueError("Detected {} devices. Currently only single-GPU training is supported!".format(torch.cuda.device_count()),
                              "Set CUDA_VISIBLE_DEVICES=<desired_gpu_id>.")
-            #print("\nUsing {} GPUs!\n".format(torch.cuda.device_count()))
-            #model = DataParallelWrapper(model)
         model = model.to(self.device)
         model.device = self.device
         loader = self.get_dataset(self.args, model, self.conf.data, phase, params.n_repeat, params.dataset_size)
@@ -359,7 +357,7 @@ class ModelTrainer(BaseTrainer):
 
     def resume(self, ckpt, path=None):
         path = os.path.join(self._hp.exp_path, 'weights') if path is None else os.path.join(path, 'weights')
-        assert ckpt is not None  # need to specify resume epoch for loading checkpoint
+        assert ckpt is not None  
         weights_file = CheckpointHandler.get_resume_ckpt_file(ckpt, path)
         self.global_step, start_epoch, _ = \
             CheckpointHandler.load_weights(weights_file, self.model,
