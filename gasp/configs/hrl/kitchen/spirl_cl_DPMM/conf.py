@@ -1,7 +1,5 @@
 from gasp.configs.hrl.kitchen.spirl.conf import *
-from gasp.models.closed_loop_spirl_mdl import ClSPiRLMdl
 from gasp.models.CL_SPIRL_DPMM_mdl import SPiRL_DPMM_Mdl
-from gasp.models.CL_SPIRL_DIVA_mdl import SPiRL_DIVAMdl
 from gasp.rl.policies.cl_model_policies import ClModelPolicy
 
 # update model params to conditioned decoder on state
