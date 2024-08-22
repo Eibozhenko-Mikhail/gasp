@@ -11,7 +11,7 @@ from gasp.rl.components.replay_buffer import UniformReplayBuffer
 from gasp.rl.agents.ac_agent import SACAgent
 from gasp.rl.agents.skill_space_agent import SkillSpaceAgent
 from gasp.models.skill_prior_mdl import SkillPriorMdl
-from gasp.models.CL_SPIRL_DIVA_mdl import SPiRL_DIVAMdl
+from gasp.models.CL_SPIRL_DPMM_mdl import SPiRL_DPMM_Mdl
 from gasp.configs.default_data_configs.kitchen import data_spec
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
@@ -66,11 +66,8 @@ ll_model_params = AttrDict(
 # LL Agent
 ll_agent_config = copy.deepcopy(base_agent_params)
 ll_agent_config.update(AttrDict(
-    model=SPiRL_DIVAMdl,
-    # model=SkillPriorMdl, # Original
+    model=SPiRL_DPMM_Mdl,
     model_params=ll_model_params,
-    # model_checkpoint=os.path.join(os.environ["EXP_DIR"],
-    #                              "skill_prior_learning/kitchen/hierarchical"), 
     model_checkpoint=os.path.join(os.environ["EXP_DIR"],
                                   "skill_prior_learning/kitchen/spirl_DPMM_h_cl_correct_eval"),
 ))

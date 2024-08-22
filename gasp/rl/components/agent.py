@@ -243,7 +243,7 @@ class HierarchicalAgent(BaseAgent):
         assert self._last_hl_output is not None
         output.update(self.ll_agent.act(self.make_ll_obs(obs_input, self._last_hl_output.action)))
 
-        # Tracking the original component responsible for this action 
+        # Tracking the original component responsible for this action (DPMM-dependency)
         _, hard_assignment = self.ll_agent.policy.net.cluster_assignments(torch.from_numpy(self._last_hl_output.action))
         output.dpmm_hard_assignment = hard_assignment[0]
 

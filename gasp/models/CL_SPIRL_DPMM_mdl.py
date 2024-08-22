@@ -11,7 +11,7 @@ from gasp.utils.pytorch_utils import get_constant_parameter, ResizeSpatial, Remo
 from gasp.models.skill_prior_mdl import SkillPriorMdl, ImageSkillPriorMdl
 from gasp.modules.subnetworks import Predictor, BaseProcessingLSTM, Encoder
 from gasp.modules.variational_inference import MultivariateGaussian
-from gasp.modules.losses import KLDivLoss, NLL, DivaKLDivLoss
+from gasp.modules.losses import KLDivLoss, NLL, DPMM_KLDivLoss
 from gasp.utils.general_utils import AttrDict, ParamDict, split_along_axis, get_clipped_optimizer
 from gasp.modules.variational_inference import ProbabilisticModel, Gaussian, MultivariateGaussian, get_fixed_prior, \
                                                 mc_kl_divergence
@@ -27,7 +27,7 @@ class SPiRL_DPMM_Mdl(SkillPriorMdl):
     def __init__(self, params, logger=None):
         super().__init__(params, logger=logger)
 
-        # Hughes hyperparameters
+        # Hughes atomic numbers (Hyperparameters)
         self.dpmm_param = dict(
             sF=0.1,
             b_minNumAtomsForNewComp=800.0,
@@ -134,7 +134,7 @@ class SPiRL_DPMM_Mdl(SkillPriorMdl):
         :arg inputs: dict with 'states', 'actions', 'images' keys from data loader
         """
 
-        # Rewriting the method of skill_prior model for DIVA functionality 
+        # Rewriting the method of skill_prior model for DPMM functionality 
         losses = AttrDict()
 
         # reconstruction loss, assume unit variance model output Gaussian
@@ -144,19 +144,18 @@ class SPiRL_DPMM_Mdl(SkillPriorMdl):
              self._regression_targets(inputs))
 
         # KL loss distinction (At epoch 0 - initializing DPMM, standart Gauss-based computation:)
-        #######___________________ Final Version: ________________########
 
         if not self.bnp_model:
             # Gauss based Loss (Default VAE)
             losses.kl_loss = KLDivLoss(self.beta)(model_output.q, model_output.p)
         else: 
-            # DPMM based Loss (DPMM Prior)
+            # DPMM-based Loss (DPMM Prior)
             z = model_output.z_q.detach()          
             comp_mu = self.comp_mu
             comp_var = self.comp_var
             prob_comps, hard_assignment = self.cluster_assignments(z) # prob_comps --> resp, comps --> Z[n]
             _, self.num_clusters = prob_comps.shape
-            losses.kl_loss = DivaKLDivLoss(self.beta)(model_output.q.mu, model_output.q.log_sigma, prob_comps, comp_mu, comp_var)
+            losses.kl_loss = DPMM_KLDivLoss(self.beta)(model_output.q.mu, model_output.q.log_sigma, prob_comps, comp_mu, comp_var)
 
         # learned skill prior net loss
         losses.q_hat_loss = self._compute_learned_prior_loss(model_output)
@@ -170,8 +169,14 @@ class SPiRL_DPMM_Mdl(SkillPriorMdl):
         return losses
     
     def fit_dpmm(self, z):
+        """
+        Fits DPMM model at the end of the epoch.
+        :arg z: Collected during the training Latent Skill Embedding samples
+        """
         z = XData(z.detach().cpu().numpy())
+
         if not self.bnp_model:
+          # Epoch 0 - Initialization
           print("*************************************************************")
           print("_________________ Initialing DPMM model ... _________________")
           self.bnp_model, self.bnp_info_dict = bnpy.run(z, 'DPMixtureModel', 'DiagGauss', 'memoVB', 
@@ -188,6 +193,7 @@ class SPiRL_DPMM_Mdl(SkillPriorMdl):
                                                         b_minNumAtomsForRetainComp=self.dpmm_param['b_minNumAtomsForRetainComp'],
                                                        )
         else:
+          # Recreate the model and fit to data
           print("*************************************************************")
           print("__________________  Fitting DPMM model ... __________________") 
           self.bnp_model, self.bnp_info_dict = bnpy.run(z, 'DPMixtureModel', 'DiagGauss', 'memoVB', 

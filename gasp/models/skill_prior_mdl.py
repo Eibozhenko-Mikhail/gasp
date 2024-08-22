@@ -210,9 +210,10 @@ class SkillPriorMdl(BaseModel, ProbabilisticModel):
             # sample latent variable from prior
             if use_learned_prior:
                 z = self.compute_learned_prior(self._learned_prior_input(inputs), first_only=True).sample()
-            elif self.bnp_model:
-                # z = Gaussian(torch.zeros((1, self._hp.nz_vae*2), device=self.device)).sample()
-                raise RuntimeError("TODO: Wants to sample from Gaussian, despite having DPMM")
+            elif hasattr(self.bnp_model):
+                # Catching an error if close loop adresses DPMM model
+                if self.bnp_model:
+                    raise RuntimeError("Wants to sample from Gaussian, despite having DPMM")
             else:
                 z = Gaussian(torch.zeros((1, self._hp.nz_vae*2), device=self.device)).sample()
                 raise RuntimeError("Switched to sampling from gaussian!")

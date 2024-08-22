@@ -56,21 +56,21 @@ class KLDivLoss(Loss):
         kl_divergence = estimates.kl_divergence(targets) # self=q and other=p and we compute KL(q, p)
         return kl_divergence
     
-class DivaKLDivLoss(Loss):
-    # Actual DIVA KL Divergence part
+class DPMM_KLDivLoss(Loss):
+    # DPMM KL Divergence wieghted loss 
     def compute(self, mu, log_sigma, prob_comps, comp_mu, comp_var):
         """
         :arg inputs: mu, log_sigma of encoder, probabilistic assignments, current DPMM parameters mu and var
         """
-        # We consider only probabilistic assignments, not hard ones
-        # get a distribution of the latent variables 
+        # We consider only probabilistic assignments 
+        # Get a distribution of the latent variables 
         var = torch.exp(2*log_sigma)
         # batch_shape [batch_size], event_shape [latent_dim]
         
         # Computing the Multivariate distributions:
         dist = torch.distributions.MultivariateNormal(loc=mu, 
                                                         covariance_matrix=torch.diag_embed(var))
-        # get a distribution for each cluster
+        # Get a distribution for each cluster
         B, K = prob_comps.shape # batch_shape, number of active clusters
         kld = torch.zeros(B).to(mu.device)
         for k in range(K):
@@ -83,7 +83,7 @@ class DivaKLDivLoss(Loss):
 
             kld_k = torch.distributions.kl_divergence(dist, expanded_dist_k)   #  shape [batch_shape, ]
             kld += torch.from_numpy(prob_k).to(mu.device) * kld_k
-            
+        # Weighted average
         kl_divergence = torch.mean(kld)
         return kl_divergence
 

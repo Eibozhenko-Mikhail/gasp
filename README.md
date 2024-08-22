@@ -76,6 +76,17 @@ After GASP model is trained, to train **GASP Meta-RL** agent on the kitchen envi
 python3 gasp/rl/train.py --path=gasp/configs/hrl/kitchen/spirl_cl_DPMM --seed=0 --prefix=GASP_kitchen_seed0
 ```
 
+### Comparing with SPiRL
+
+Original SPiRL commands work as well. To train unmodifyed SPiRL close-loop model, run 
+```
+# for Skill Prior learning
+python3 gasp/train.py --path=gasp/configs/skill_prior_learning/kitchen/hierarchical_cl --val_data_size=160
+
+# for RL
+python3 gasp/rl/train.py --path=gasp/configs/hrl/kitchen/spirl_cl --seed=0 --prefix=SPIRL_kitchen_seed0
+```
+
 ### Visualizing learned DPMM distribution
 
 After GASP model is trained, vizualize the latent distribution compared with original gaussian with:
@@ -98,14 +109,14 @@ This work is built around the [SPiRL](https://github.com/clvrai/spirl) framework
 |Feature        | Description        | File |
 |:------------- |:-------------|:-------------|
 | GASP Model | Main framework of DPMM-based Skill Prior learning|[```CL_SPIRL_DPMM_mdl```](gasp/models/CL_SPIRL_DPMM_mdl.py#L22)|
-| DPMM-based Loss | Altered loss computation, involving weighted sum of KL-divergencies |[```DivaKLDivLoss```](gasp/modules/losses.py#L59)|
+| DPMM-based Loss | Altered loss computation, involving weighted sum of KL-divergencies |[```DPMM_KLDivLoss```](gasp/modules/losses.py#L59)|
 | DPMM fitting | Train loop altered for adaptive DPMM fitting |[```ModelTrainer```](gasp/train.py#L30)|
 | Parameters upload | DPMM components for skills alocation |[```RLTrainer```](gasp/rl/train.py#L285)|
 | Influence on RL | Skills allocation to DPMM components |[```HierarchicalAgent```](gasp/rl/components/agent.py#L246)|
 | GASP Configuration   | Configuration for Skill Prior learning phase         | [```spirl_DPMM_h_cl```](gasp/configs/skill_prior_learning/kitchen/spirl_DPMM_h_cl/conf.py#L10) |
 | GASP Meta-RL Configuration| Cofiguration for HRL phase|[```spirl_cl_DPMM```](gasp/configs/hrl/kitchen/spirl_cl_DPMM/conf.py#L10)|
-| DPMM Visualization| Vizualization of DPMM components|[```DPMM_vis```](analysis/DPMM_vis.py#L36)|
-| DPMM Inference | Vizualization of DPMM-based inference|[```SD_Inference```](analysis/SD_Inference.py#L34)|
+| DPMM Visualization| Vizualization of DPMM components|[```DPMM_vis```](analysis/DPMM_vis.py#L16)|
+| DPMM Inference | Vizualization of DPMM-based inference|[```SD_Inference```](analysis/SD_Inference.py#L21)|
 
 ### Altering the hyperparameters
 
@@ -118,7 +129,7 @@ This work is built around the [SPiRL](https://github.com/clvrai/spirl) framework
 
 Our solution follows the original code structure of [SPiRL](https://github.com/clvrai/spirl) which provided for further convinience below:
 ```
-gasp
+GASP
 
   |- components            # reusable infrastructure for model training
   |    |- base_model.py    # basic model class that all models inherit from
@@ -159,6 +170,9 @@ gasp
   |- train.py              # main model training script, builds all components + runs training loop and logging
 ```
 
+## Updates
+
+This work continues to develop after thesis submission. The changes are documented here.
 
 
 
