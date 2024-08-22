@@ -121,7 +121,7 @@ This work is built around the [SPiRL](https://github.com/clvrai/spirl) framework
 ### Altering the hyperparameters
 
 - Default hyperparameters are defined in [```SkillPriorMdl```](gasp/models/skill_prior_mdl.py#L55), which is a parent class for [```SPiRL_DPMM_Mdl```](gasp/models/CL_SPIRL_DPMM_mdl.py#L22) (*nz_enc*, *nz_vae*, *kl_div_weight*, e.t.c.).
-- [```SPiRL_DPMM_Mdl```](gasp/models/CL_SPIRL_DPMM_mdl.py#L27) defines Hughes atomic numbers at initialization step and DPMM-related parameters (*b_minNumAtomsForNewComp*, *b_minNumAtomsForTargetComp*, *b_minNumAtomsForRetainComp*).
+- [```SPiRL_DPMM_Mdl```](gasp/models/CL_SPIRL_DPMM_mdl.py#L30) defines Hughes atomic numbers at initialization step and DPMM-related parameters (*b_minNumAtomsForNewComp*, *b_minNumAtomsForTargetComp*, *b_minNumAtomsForRetainComp*).
 
 - Other parameters can be altered in configuration files [```spirl_DPMM_h_cl```](gasp/configs/skill_prior_learning/kitchen/spirl_DPMM_h_cl/conf.py#L10) for Prior Learning Phase and in [```spirl_cl_DPMM```](gasp/configs/hrl/kitchen/spirl_cl_DPMM/conf.py#L10) for Hierarchical Reinforcement Learning respectively (*num_epochs*, *top_of_n_eval*, *policy_model_checkpoint*, e.t.c.). 
 
