@@ -27,7 +27,7 @@ The proposed solution is based on two frameworks. Refer to the pages of the algo
 ```
 # Setup the environment
 
-cd gasp
+cd GASP
 pip3 install virtualenv
 virtualenv -p $(which python3) ./venv
 source ./venv/bin/activate
