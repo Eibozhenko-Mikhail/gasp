@@ -7,9 +7,9 @@
 
 This page is dedicated to implementation of "**Generalized Adaptive Skill Prior Meta-Reinforcement Learning**" algorithm in the context of final Master Thesis for chair of Robotics, Artificial Intelligence and Real-time Systems at TUM School of Computation, Information and Technology authored by Mikhail Eibozhenko.
 
-## Acknowledges
+## Acknowledgements
 
-The proposed solution is based on two frameworks, refer to pages of algorithms mentioned below for more information:
+The proposed solution is based on two frameworks. Refer to the pages of the algorithms mentioned below for more information.
 - [SPiRL](https://github.com/clvrai/spirl) - Skill-Prior framework for Reinforcement Learning acceleration
 - [DIVA](https://github.com/Ghiara/DIVA) - VAE-based non-parametric Latent space clustering 
 
@@ -52,7 +52,7 @@ export DATA_DIR=./data
 ### 3. Install the Fork of D4RL benchmark
 
 Follow the [D4RL Fork link](https://github.com/kpertsch/d4rl) and install the fork according to instructions.
-This fork includes new key 'completed_tasks' in Kitchen environment and **neccessary for correct RL phase**.
+This fork includes the new key 'completed_tasks' in the Kitchen environment, which is **necessary for the correct RL phase**.
 
 ### 4. Log in to WandB to track results
 
@@ -78,7 +78,7 @@ python3 gasp/rl/train.py --path=gasp/configs/hrl/kitchen/spirl_cl_DPMM --seed=0 
 
 ### Comparing with SPiRL
 
-Original SPiRL commands work as well. To train unmodifyed SPiRL close-loop model, run 
+Original SPiRL commands work as well. To train unmodified SPiRL close-loop model, run 
 ```
 # for Skill Prior learning
 python3 gasp/train.py --path=gasp/configs/skill_prior_learning/kitchen/hierarchical_cl --val_data_size=160
@@ -89,7 +89,7 @@ python3 gasp/rl/train.py --path=gasp/configs/hrl/kitchen/spirl_cl --seed=0 --pre
 
 ### Visualizing learned DPMM distribution
 
-After GASP model is trained, vizualize the latent distribution compared with original gaussian with:
+After GASP model is trained, visualize the latent distribution compared with original gaussian with:
 ```
 python3 analysis/DPMM_vis.py
 ```
@@ -179,9 +179,10 @@ This work continues to develop. The changes are documented here.
 
 - Project renamed from SPIRL_DPMM to GASP 
 - Main folder renamed from spirl to gasp
+- Added commentary to all modified files
 - Experimental Skill Prior learning configurations are moved to [```experimental_confs```](gasp/configs/skill_prior_learning/kitchen/experimental_confs/) folder
-- DivaKLDivLoss is renamed to [```DPMM_KLDivLoss```](gasp/modules/losses.py#L59)|
-- "Visualizations" folder renamed to [```analysis```](analysis/)| and contains example images in folder[```vis_examples```](analysis/vis_examples/)| for further convinience 
+- DivaKLDivLoss is renamed to [```DPMM_KLDivLoss```](gasp/modules/losses.py#L59)
+- "Visualizations" folder renamed to [```analysis```](analysis/) and contains example images in folder[```vis_examples```](analysis/vis_examples/) for further convinience 
 
 
 
