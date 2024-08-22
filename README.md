@@ -27,7 +27,7 @@ The proposed solution is based on two frameworks. Refer to the pages of the algo
 ```
 # Setup the environment
 
-cd GASP
+cd gasp
 pip3 install virtualenv
 virtualenv -p $(which python3) ./venv
 source ./venv/bin/activate
@@ -177,7 +177,7 @@ This work continues to develop. The changes are documented here.
 
 ### [Aug 2024] - Added commentary, Code clean up
 
-- Project renamed from SPIRL_DPMM to GASP 
+- Project renamed from SPIRL_DPMM to gasp 
 - Main folder renamed from spirl to gasp
 - Added commentary to all modified files
 - Experimental Skill Prior learning configurations are moved to [```experimental_confs```](gasp/configs/skill_prior_learning/kitchen/experimental_confs/) folder
