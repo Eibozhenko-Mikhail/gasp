@@ -1,34 +1,14 @@
 # Visualization of the model
 import torch
 import torch
-import torch.nn as nn
-import bnpy
 import os
-import imp
-from itertools import cycle
 import numpy as np
-from typing import List, Callable, Union, Any, TypeVar, Tuple
-from gasp.components.base_model import BaseModel
-from gasp.utils.general_utils import batch_apply, ParamDict
-from gasp.utils.pytorch_utils import get_constant_parameter, ResizeSpatial, RemoveSpatial
-from gasp.models.skill_prior_mdl import SkillPriorMdl, ImageSkillPriorMdl
-from gasp.modules.subnetworks import Predictor, BaseProcessingLSTM, Encoder
-from gasp.modules.variational_inference import MultivariateGaussian
-from gasp.modules.losses import KLDivLoss, NLL, DivaKLDivLoss
-from gasp.utils.general_utils import AttrDict, ParamDict, split_along_axis, get_clipped_optimizer
-from gasp.modules.variational_inference import ProbabilisticModel, Gaussian, MultivariateGaussian, get_fixed_prior, \
-                                                mc_kl_divergence
-from gasp.components.checkpointer import load_by_key, freeze_modules
-from gasp.components.data_loader import RandomVideoDataset
-from gasp.utils.pytorch_utils import RepeatedDataLoader
-from gasp.models.CL_SPIRL_DIVA_mdl import SPiRL_DIVAMdl
+
+
 from gasp.models.CL_SPIRL_DPMM_mdl import SPiRL_DPMM_Mdl
-from gasp.train import ModelTrainer
-from gasp.components.params import get_args
 from gasp.configs.skill_prior_learning.kitchen.spirl_DPMM_h_cl_correct_eval.conf import model_config
 
 import matplotlib.pyplot as plt
-import matplotlib.markers as mark
 from matplotlib.ticker import MaxNLocator
 from sklearn.manifold import TSNE
 

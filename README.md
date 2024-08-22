@@ -27,7 +27,7 @@ The proposed solution is based on two frameworks, refer to pages of algorithms m
 ```
 # Setup the environment
 
-cd SPIRL_DPMM
+cd gasp
 pip3 install virtualenv
 virtualenv -p $(which python3) ./venv
 source ./venv/bin/activate
@@ -57,8 +57,8 @@ This fork includes new key 'completed_tasks' in Kitchen environment and **necces
 ### 4. Log in to WandB to track results
 
 [WandB](https://www.wandb.com/) is used for **logging the training process**. Before running any of the commands below, 
-create an account and then change the WandB entity and project name at the top of [train.py](spirl/train.py) and
-[rl/train.py](spirl/rl/train.py) to match your account.
+create an account and then change the WandB entity and project name at the top of [train.py](gasp/train.py) and
+[rl/train.py](gasp/rl/train.py) to match your account.
 
 ## Main Commands
 
@@ -66,14 +66,14 @@ create an account and then change the WandB entity and project name at the top o
 
 To train a **Generalized Adaptive Skill Prior** model, run:
 ```
-python3 spirl/train.py --path=spirl/configs/skill_prior_learning/kitchen/spirl_DPMM_h_cl --val_data_size=160
+python3 gasp/train.py --path=gasp/configs/skill_prior_learning/kitchen/spirl_DPMM_h_cl --val_data_size=160
 ```
 
 ### Training GASP Meta-RL
 
 After GASP model is trained, to train **GASP Meta-RL** agent on the kitchen environment, run:
 ```
-python3 spirl/rl/train.py --path=spirl/configs/hrl/kitchen/spirl_cl_DPMM --seed=0 --prefix=GASP_kitchen_seed0
+python3 gasp/rl/train.py --path=gasp/configs/hrl/kitchen/spirl_cl_DPMM --seed=0 --prefix=GASP_kitchen_seed0
 ```
 
 ### Visualizing learned DPMM distribution
@@ -97,28 +97,28 @@ This work is built around the [SPiRL](https://github.com/clvrai/spirl) framework
 
 |Feature        | Description        | File |
 |:------------- |:-------------|:-------------|
-| GASP Model | Main framework of DPMM-based Skill Prior learning|[```CL_SPIRL_DPMM_mdl```](spirl/models/CL_SPIRL_DPMM_mdl.py#L22)|
-| DPMM-based Loss | Altered loss computation, involving weighted sum of KL-divergencies |[```DivaKLDivLoss```](spirl/modules/losses.py#L59)|
-| DPMM fitting | Train loop altered for adaptive DPMM fitting |[```ModelTrainer```](spirl/train.py#L30)|
-| Parameters upload | DPMM components for skills alocation |[```RLTrainer```](spirl/rl/train.py#L285)|
-| Influence on RL | Skills allocation to DPMM components |[```HierarchicalAgent```](spirl/rl/components/agent.py#L246)|
-| GASP Configuration   | Configuration for Skill Prior learning phase         | [```spirl_DPMM_h_cl```](spirl/configs/skill_prior_learning/kitchen/spirl_DPMM_h_cl/conf.py#L10) |
-| GASP Meta-RL Configuration| Cofiguration for HRL phase|[```spirl_cl_DPMM```](spirl/configs/hrl/kitchen/spirl_cl_DPMM/conf.py#L10)|
+| GASP Model | Main framework of DPMM-based Skill Prior learning|[```CL_SPIRL_DPMM_mdl```](gasp/models/CL_SPIRL_DPMM_mdl.py#L22)|
+| DPMM-based Loss | Altered loss computation, involving weighted sum of KL-divergencies |[```DivaKLDivLoss```](gasp/modules/losses.py#L59)|
+| DPMM fitting | Train loop altered for adaptive DPMM fitting |[```ModelTrainer```](gasp/train.py#L30)|
+| Parameters upload | DPMM components for skills alocation |[```RLTrainer```](gasp/rl/train.py#L285)|
+| Influence on RL | Skills allocation to DPMM components |[```HierarchicalAgent```](gasp/rl/components/agent.py#L246)|
+| GASP Configuration   | Configuration for Skill Prior learning phase         | [```spirl_DPMM_h_cl```](gasp/configs/skill_prior_learning/kitchen/spirl_DPMM_h_cl/conf.py#L10) |
+| GASP Meta-RL Configuration| Cofiguration for HRL phase|[```spirl_cl_DPMM```](gasp/configs/hrl/kitchen/spirl_cl_DPMM/conf.py#L10)|
 | DPMM Visualization| Vizualization of DPMM components|[```DPMM_vis```](analysis/DPMM_vis.py#L36)|
 | DPMM Inference | Vizualization of DPMM-based inference|[```SD_Inference```](analysis/SD_Inference.py#L34)|
 
 ### Altering the hyperparameters
 
-- Default hyperparameters are defined in [```SkillPriorMdl```](spirl/models/skill_prior_mdl.py#L55), which is a parent class for [```CL_SPIRL_DPMM_mdl```](spirl/models/CL_SPIRL_DPMM_mdl.py#L22) (*nz_enc*, *nz_vae*, *kl_div_weight*, e.t.c.).
-- [```CL_SPIRL_DPMM_mdl```](spirl/models/CL_SPIRL_DPMM_mdl.py#L27) defines Hughes atomic numbers at initialization step and DPMM-related parameters (*b_minNumAtomsForNewComp*, *b_minNumAtomsForTargetComp*, *b_minNumAtomsForRetainComp*).
+- Default hyperparameters are defined in [```SkillPriorMdl```](gasp/models/skill_prior_mdl.py#L55), which is a parent class for [```CL_SPIRL_DPMM_mdl```](gasp/models/CL_SPIRL_DPMM_mdl.py#L22) (*nz_enc*, *nz_vae*, *kl_div_weight*, e.t.c.).
+- [```CL_SPIRL_DPMM_mdl```](gasp/models/CL_SPIRL_DPMM_mdl.py#L27) defines Hughes atomic numbers at initialization step and DPMM-related parameters (*b_minNumAtomsForNewComp*, *b_minNumAtomsForTargetComp*, *b_minNumAtomsForRetainComp*).
 
-- Other parameters can be altered in configuration files [```spirl_DPMM_h_cl```](spirl/configs/skill_prior_learning/kitchen/spirl_DPMM_h_cl/conf.py#L10) for Prior Learning Phase and in [```spirl_cl_DPMM```](spirl/configs/hrl/kitchen/spirl_cl_DPMM/conf.py#L10) for Hierarchical Reinforcement Learning respectively (*num_epochs*, *top_of_n_eval*, *policy_model_checkpoint*, e.t.c.). 
+- Other parameters can be altered in configuration files [```spirl_DPMM_h_cl```](gasp/configs/skill_prior_learning/kitchen/spirl_DPMM_h_cl/conf.py#L10) for Prior Learning Phase and in [```spirl_cl_DPMM```](gasp/configs/hrl/kitchen/spirl_cl_DPMM/conf.py#L10) for Hierarchical Reinforcement Learning respectively (*num_epochs*, *top_of_n_eval*, *policy_model_checkpoint*, e.t.c.). 
 
 ### Detailed Code Structure
 
 Our solution follows the original code structure of [SPiRL](https://github.com/clvrai/spirl) which provided for further convinience below:
 ```
-spirl
+gasp
 
   |- components            # reusable infrastructure for model training
   |    |- base_model.py    # basic model class that all models inherit from
