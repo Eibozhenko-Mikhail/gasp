@@ -129,7 +129,7 @@ This work is built around the [SPiRL](https://github.com/clvrai/spirl) framework
 
 Our solution follows the original code structure of [SPiRL](https://github.com/clvrai/spirl) which provided for further convinience below:
 ```
-GASP
+gasp
 
   |- components            # reusable infrastructure for model training
   |    |- base_model.py    # basic model class that all models inherit from
