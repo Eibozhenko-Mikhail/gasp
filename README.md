@@ -172,9 +172,16 @@ GASP
 
 ## Updates
 
-This work continues to develop after thesis submission. The changes are documented here.
+This work continues to develop. The changes are documented here.
 
 
+### [Aug 2024] - Added commentary, Code clean up
+
+- Project renamed from SPIRL_DPMM to GASP 
+- Main folder renamed from spirl to gasp
+- Experimental Skill Prior learning configurations are moved to [```experimental_confs```](gasp/configs/skill_prior_learning/kitchen/experimental_confs/) folder
+- DivaKLDivLoss is renamed to [```DPMM_KLDivLoss```](gasp/modules/losses.py#L59)|
+- "Visualizations" folder renamed to [```analysis```](analysis/)| and contains example images in folder[```vis_examples```](analysis/vis_examples/)| for further convinience 
 
 
 
