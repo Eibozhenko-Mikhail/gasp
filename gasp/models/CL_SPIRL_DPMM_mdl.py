@@ -98,7 +98,7 @@ class SPiRL_DPMM_Mdl(SkillPriorMdl):
         # sample latent variable
         if self._sample_prior: # if validation
             if not use_learned_prior and self.bnp_model:
-                print("Validation based on DPMM...")
+                # Validation based on DPMM 
                 z = output.q.sample()
                 _, hard_assignment = self.cluster_assignments(z)  # [batch_size]
                 zs_sampled = []
@@ -113,7 +113,7 @@ class SPiRL_DPMM_Mdl(SkillPriorMdl):
                 output.z = z_component
                 output.z_q = z # for loss computation
             else:
-                print("Validation based on Gauss...")
+                # Validation based on Gauss 
                 output.z = output.p.sample()
                 output.z_q = output.q.sample() # for loss computation
         else: # if training/inference

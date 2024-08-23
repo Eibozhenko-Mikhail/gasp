@@ -20,7 +20,7 @@ ll_policy_params = AttrDict(
     policy_model=SPiRL_DPMM_Mdl, 
     policy_model_params=ll_model_params,
     policy_model_checkpoint=os.path.join(os.environ["EXP_DIR"],
-                                         "skill_prior_learning/kitchen/spirl_DPMM_h_cl_v_19_07"),
+                                         "skill_prior_learning/kitchen/spirl_DPMM_h_cl"),
 )
 ll_policy_params.update(ll_model_params)
 
